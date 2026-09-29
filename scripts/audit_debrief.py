@@ -72,10 +72,10 @@ def main():
 
     result = audit_text(content)
     if result["passed"]:
-        print("✓ Feynman Debrief Audit PASSED: Clear, mechanistic, and free of lazy jargon.")
+        print("[PASS] Feynman Debrief Audit PASSED: Clear, mechanistic, and free of lazy jargon.")
         sys.exit(0)
     else:
-        print("✗ Feynman Debrief Audit FAILED:")
+        print("[FAIL] Feynman Debrief Audit FAILED:")
         for err in result["errors"]:
             print(f"  - {err}")
         sys.exit(1)

@@ -23,6 +23,30 @@ An Agent Skill that turns software changes and PR diffs into clear, mechanistic 
 
 ---
 
+## Toggle Mode and Session Controls
+
+This skill supports both one-shot commands and persistent session toggling:
+
+1. **Enable Persistent Mode (`/feynman-debrief on` or `feynman mode on`):**
+   - Confirm activation in one line: *"Feynman debrief mode enabled: every subsequent code change will conclude with a Feynman Debrief."*
+   - Once enabled, automatically append a Feynman Debrief to the end of all future code implementations for the remainder of the session.
+2. **Disable Persistent Mode (`/feynman-debrief off` or `stop feynman mode`):**
+   - Confirm deactivation in one line: *"Feynman debrief mode disabled: returning to default output style."*
+   - Stop appending debriefs automatically.
+3. **Check Status (`/feynman-debrief status`):**
+   - Report whether persistent mode is currently ACTIVE or INACTIVE.
+4. **One-Shot Execution (`/feynman-debrief` or `/feynman-debrief once`):**
+   - Debrief only the latest diff or specified code change without changing persistent session state.
+
+## Persistence Rules
+
+When Toggle Mode is ON:
+- These rules apply to every code modification turn for the rest of the session.
+- They do not expire after a few turns and do not lapse when changing topics.
+- Deactivate only upon receiving `/feynman-debrief off` or "stop feynman mode".
+
+---
+
 ## The Workflow
 
 1. **Inspect the Diff:**

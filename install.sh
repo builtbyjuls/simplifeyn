@@ -116,18 +116,18 @@ install_to() {
     mkdir -p "$dest/scripts"
     cp -r "$SCRIPT_DIR/scripts/"* "$dest/scripts/"
   fi
-  echo "✓ Installed $SKILL_NAME to $dest"
+  echo "[OK] Installed $SKILL_NAME to $dest"
 }
 
 check_in() {
   local dest_base="$1"
   local dest="$dest_base/$SKILL_NAME"
   if [ ! -d "$dest" ]; then
-    echo "✗ Not installed in $dest"
+    echo "[FAIL] Not installed in $dest"
     return 1
   fi
   if cmp -s "$SCRIPT_DIR/SKILL.md" "$dest/SKILL.md"; then
-    echo "✓ $dest is up to date"
+    echo "[OK] $dest is up to date"
     return 0
   else
     echo "! $dest differs from source (run install.sh to update)"

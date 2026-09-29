@@ -7,14 +7,14 @@ The ladder is a multi-tier structure that communicates software changes to diffe
 ## The Three Rungs
 
 ```text
-[ Level 2: Maintainer ]   → Invariants, failure modes, concurrency, rejected designs
-[ Level 1: Practitioner ] → Code symbols, data structures, state changes, trade-offs
-[ Level 0: Kitchen Table ] → Zero jargon. Mechanical cause-and-effect in everyday terms.
+[ Level 2: Maintainer ]   -> Invariants, failure modes, concurrency, rejected designs
+[ Level 1: Practitioner ] -> Code symbols, data structures, state changes, trade-offs
+[ Level 0: Kitchen Table ] -> Zero jargon. Mechanical cause-and-effect in everyday terms.
 ```
 
 ---
 
-### Level 0 · Kitchen Table
+### Level 0 - Kitchen Table
 
 * **Audience:** Product managers, designers, junior team members, non-technical stakeholders.
 * **Core Rule:** **Zero technical terms.**
@@ -25,7 +25,7 @@ The ladder is a multi-tier structure that communicates software changes to diffe
 
 ---
 
-### Level 1 · Practitioner
+### Level 1 - Practitioner
 
 * **Audience:** The code reviewer, teammate, or developer reading the PR diff.
 * **Core Rule:** Connect the physical picture to the exact software symbols, data structures, and state transitions.
@@ -35,7 +35,7 @@ The ladder is a multi-tier structure that communicates software changes to diffe
 
 ---
 
-### Level 2 · Maintainer
+### Level 2 - Maintainer
 
 * **Audience:** The senior engineer, site reliability engineer (SRE), on-call troubleshooter.
 * **Core Rule:** Focus on invariants, failure modes, scale ceilings, and rejected alternatives.

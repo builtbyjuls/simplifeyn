@@ -20,21 +20,21 @@ Feynman explained physics through physical, bodily mechanics. In software, code 
 
 ## 2. Banned Words (Measurement, Not Taste)
 
-In 88,000 words of Richard Feynman’s verified primary lectures, the word *"basically"* appears exactly zero times. *"Trivial"* appears once.
+In 88,000 words of Richard Feynman's verified primary lectures, the word *"basically"* appears exactly zero times. *"Trivial"* appears once.
 
 The following words are **strictly banned** in a Feynman debrief:
 
-* ❌ **"Basically"**: The universal signal that the speaker doesn't know the exact mechanism and is substituting a fuzzy impression.
-* ❌ **"Simply" / "Just"**: Downplays real difficulty. If something takes 4 hours of debugging, it is never "simply a matter of changing a flag."
-* ❌ **"Obviously"**: If it were obvious, nobody would need an explanation. It alienates learners and blinds experts.
-* ❌ **"Trivial"**: An assertion of intellectual ego that adds zero pedagogical value.
-* ❌ **"Abstracted away"**: Hides where the work actually went. Name the machine that does the work.
+* [BANNED] **"Basically"**: The universal signal that the speaker doesn't know the exact mechanism and is substituting a fuzzy impression.
+* [BANNED] **"Simply" / "Just"**: Downplays real difficulty. If something takes 4 hours of debugging, it is never "simply a matter of changing a flag."
+* [BANNED] **"Obviously"**: If it were obvious, nobody would need an explanation. It alienates learners and blinds experts.
+* [BANNED] **"Trivial"**: An assertion of intellectual ego that adds zero pedagogical value.
+* [BANNED] **"Abstracted away"**: Hides where the work actually went. Name the machine that does the work.
 
 ---
 
 ## 3. Sentence Architecture and "Burstiness"
 
-Feynman’s speaking style had a measurable cadence:
+Feynman's speaking style had a measurable cadence:
 1. **The Build:** A compound sentence that gathers the moving parts together and follows the flow of cause and effect.
 2. **The Landing:** A short, punchy sentence (under 8 words) that crystalizes the insight.
 

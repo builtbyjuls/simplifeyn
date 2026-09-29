@@ -51,6 +51,15 @@ class TestSkillStructure(unittest.TestCase):
         for section in required_sections:
             self.assertIn(section, content, f"SKILL.md must contain section '{section}'")
 
+    def test_toggleable_support(self):
+        with open(self.skill_md, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("Toggle Mode", content, "SKILL.md must describe Toggle Mode")
+        self.assertIn("/feynman-debrief on", content, "SKILL.md must support '/feynman-debrief on'")
+        self.assertIn("/feynman-debrief off", content, "SKILL.md must support '/feynman-debrief off'")
+        self.assertIn("Persistence", content, "SKILL.md must specify persistence across session turns")
+
     def test_references_exist(self):
         ref_dir = os.path.join(BASE_DIR, "references")
         self.assertTrue(os.path.isdir(ref_dir), "references/ directory must exist")

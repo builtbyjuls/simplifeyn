@@ -28,7 +28,7 @@ This document contrasts a typical AI agent's explanation of a code change with a
 
 ---
 
-### ❌ The Typical Agent Output (What Most AI Assistants Say)
+### [BAD] The Typical Agent Output (What Most AI Assistants Say)
 
 > *"I have updated `fetchWithRetry` in `src/client.ts`. Basically, I implemented an exponential backoff algorithm with full jitter. Instead of a fixed 1-second delay between attempts, the timeout now doubles on every subsequent retry attempt using `Math.pow(2, attempt)`, and we calculate a random jitter offset up to 500ms using `Math.random()`. This optimizes the network throughput and avoids thundering herd problems on downstream backend services."*
 
@@ -39,7 +39,7 @@ This document contrasts a typical AI agent's explanation of a code change with a
 
 ---
 
-### ✅ The Feynman Debrief Output
+### [GOOD] The Feynman Debrief Output
 
 ## In One Sentence
 When a remote server fails to answer, we now double the wait time before each retry and add a random wobble of up to half a second, preventing thousands of retrying clients from hammering the server at the exact same instant.
@@ -49,14 +49,14 @@ Imagine a crowded restaurant where the kitchen is overwhelmed and the host turns
 
 ## The Ladder
 
-### Level 0 · Kitchen Table
+### Level 0 - Kitchen Table
 If your internet connection hiccups while loading a page, your computer used to tap the website on the shoulder every single second. Now, if the site says it's too busy, your computer waits a little, then waits twice as long, and randomly staggers its next tap so a mob of users doesn't knock at the exact same fraction of a second.
 
-### Level 1 · Practitioner
+### Level 1 - Practitioner
 We replaced the constant 1000ms sleep in `fetchWithRetry()` with `baseDelay = 1000 * 2^attempt` plus a random `jitter` between 0 and 500ms.
 - **Trade-off:** We increase average retry latency (worst-case wait increases from 3s to ~7.5s across 3 retries) in exchange for eliminating packet collisions and lock contention on overwhelmed upstream APIs.
 
-### Level 2 · Maintainer
+### Level 2 - Maintainer
 - **Invariants Preserved:** The final attempt re-throws the underlying error without sleeping.
 - **Edge Cases & Failure Modes:**
   1. *Unbounded Delay:* If `retries` is configured above 6, delays will exceed 1 minute; production callers should enforce an absolute request deadline or timeout budget.

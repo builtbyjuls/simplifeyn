@@ -36,7 +36,7 @@ When AI agents implement features or fix bugs, they default to reciting files an
 4. **Where the Picture Breaks:** Every analogy has limits. The agent explicitly states where the physical picture fails to represent software reality.
 5. **What Was Left Out:** Explicitly names what was simplified or deferred.
 
-👉 **[See a complete Before vs. After Worked Example](./assets/worked-examples.md)**
+**-> [See a complete Before vs. After Worked Example](./assets/worked-examples.md)**
 
 ---
 
@@ -74,20 +74,37 @@ Copy the `feynman-debrief` folder into whichever skill directory your CLI uses:
 
 ## Usage
 
-### Mode 1: On-Demand Slash Command
+### Mode 1: Toggleable Session Mode (Recommended)
 
-After your agent writes code or completes a task, simply run:
+Turn Feynman debriefing on or off dynamically during your session:
+
+```bash
+# Turn ON: every subsequent code change will conclude with a Feynman Debrief
+/feynman-debrief on
+
+# Check whether debrief mode is currently active
+/feynman-debrief status
+
+# Turn OFF: return to normal output style
+/feynman-debrief off
+```
+
+### Mode 2: One-Shot Command
+
+Run once for the latest change or a specific commit without enabling session persistence:
 
 ```bash
 /feynman-debrief
+# or for a specific commit:
+/feynman-debrief HEAD~1
 ```
 
 Or ask the agent in plain language:
 > *"Explain what you just implemented using the Feynman technique."*
 
-### Mode 2: Always-On Rule (Automatic Post-Task Debrief)
+### Mode 3: Always-On Project Rule
 
-If you want your agent to conclude **every** feature implementation or bug fix with a Feynman Debrief automatically, add this block to your project's `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`:
+If you want your agent to conclude **every** feature implementation or bug fix with a Feynman Debrief automatically across the whole repo, add this block to your project's `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`:
 
 ```markdown
 ## Post-Implementation Debrief
@@ -121,21 +138,21 @@ cat response.txt | python3 scripts/audit_debrief.py --stdin
 
 ```text
 feynman-debrief/
-├── SKILL.md                  # Main Agent Skill specification
-├── README.md                 # Documentation and guide
-├── install.sh                # Universal installer
-├── LICENSE                   # MIT License
-├── references/
-│   ├── voice.md              # Style forensics, banned buzzwords, sensory verbs
-│   ├── analogies.md          # Reference catalog of computing analogies & breaking points
-│   ├── ladder.md             # Multi-tier calibration (Kitchen Table -> Maintainer)
-│   └── failure-modes.md      # 5 critical ways technical explanations fail & fixes
-├── assets/
-│   └── worked-examples.md    # Real PR diff with Before/After contrast
-├── scripts/
-│   ├── audit_debrief.py      # Automated linter against lazy jargon
-│   └── get-diff.sh           # Git diff extractor helper
-└── tests/                    # Automated TDD test suite
+|-- SKILL.md                  # Main Agent Skill specification
+|-- README.md                 # Documentation and guide
+|-- install.sh                # Universal installer
+|-- LICENSE                   # MIT License
+|-- references/
+|   |-- voice.md              # Style forensics, banned buzzwords, sensory verbs
+|   |-- analogies.md          # Reference catalog of computing analogies & breaking points
+|   |-- ladder.md             # Multi-tier calibration (Kitchen Table -> Maintainer)
+|   \-- failure-modes.md      # 5 critical ways technical explanations fail & fixes
+|-- assets/
+|   \-- worked-examples.md    # Real PR diff with Before/After contrast
+|-- scripts/
+|   |-- audit_debrief.py      # Automated linter against lazy jargon
+|   \-- get-diff.sh           # Git diff extractor helper
+\-- tests/                    # Automated TDD test suite
 ```
 
 ---
@@ -151,4 +168,4 @@ Contributions and feedback are welcome! Areas to explore:
 
 ## License
 
-[MIT](./LICENSE) © Julius & contributors. Use it, fork it, ship it.
+[MIT](./LICENSE) (c) Julius & contributors. Use it, fork it, ship it.
