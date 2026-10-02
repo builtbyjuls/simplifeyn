@@ -30,7 +30,7 @@ class TestInstaller(unittest.TestCase):
         proc = subprocess.run([self.installer, "--target", target_skills_dir], capture_output=True, text=True)
         self.assertEqual(proc.returncode, 0, f"Installer failed with: {proc.stderr}")
 
-        installed_skill = os.path.join(target_skills_dir, "feynman-debrief", "SKILL.md")
+        installed_skill = os.path.join(target_skills_dir, "simplifeyn", "SKILL.md")
         self.assertTrue(os.path.isfile(installed_skill), "SKILL.md must exist in target directory")
 
     def test_install_check_mode(self):

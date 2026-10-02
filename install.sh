@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Universal installer for feynman-debrief across Claude Code, Antigravity, OpenAI Codex, and Cursor
+# Universal installer for simplifeyn across Claude Code, Antigravity, OpenAI Codex, and Cursor
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SKILL_NAME="feynman-debrief"
+SKILL_NAME="simplifeyn"
 
 usage() {
   cat << 'EOF'
 Usage: ./install.sh [OPTIONS]
 
-Install feynman-debrief skill to one or more AI coding assistants.
+Install simplifeyn skill to one or more AI coding assistants.
 
 Options:
   --claude         Install to ~/.claude/skills/ (Claude Code)

@@ -39,7 +39,7 @@ This document contrasts a typical AI agent's explanation of a code change with a
 
 ---
 
-### [GOOD] The Feynman Debrief Output
+### [GOOD] The Simplifeyn Debrief Output
 
 ## In One Sentence
 When a remote server fails to answer, we now double the wait time before each retry and add a random wobble of up to half a second, preventing thousands of retrying clients from hammering the server at the exact same instant.

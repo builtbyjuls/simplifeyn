@@ -1,4 +1,4 @@
-# Feynman Debrief (`feynman-debrief`)
+# Simplifeyn (`simplifeyn`)
 
 [![Agent Skills Standard](https://img.shields.io/badge/Agent%20Skills-Standard-blue.svg)](https://agentskills.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
@@ -23,9 +23,9 @@ When AI agents implement features or fix bugs, they default to reciting files an
 
 ---
 
-## The Feynman Debrief Alternative
+## The Simplifeyn Alternative
 
-`feynman-debrief` forces the AI coding agent into Richard Feynman's cognitive model:
+`simplifeyn` forces the AI coding agent into Richard Feynman's cognitive model:
 
 1. **In One Sentence:** The physical delta in plain language. Zero buzzwords (`basically`, `simply`, `optimized`).
 2. **The Tangible Picture:** One sensory, mechanical analogy (a kitchen, a desk, a conveyor belt).
@@ -47,8 +47,8 @@ When AI agents implement features or fix bugs, they default to reciting files an
 Clone and run the installer:
 
 ```bash
-git clone https://github.com/your-username/feynman-debrief.git /tmp/feynman-debrief
-cd /tmp/feynman-debrief
+git clone https://github.com/your-username/simplifeyn.git /tmp/simplifeyn
+cd /tmp/simplifeyn
 
 # Auto-detect your installed tools and install
 ./install.sh
@@ -63,12 +63,12 @@ cd /tmp/feynman-debrief
 
 ### 2. Manual Drop-in (One Folder)
 
-Copy the `feynman-debrief` folder into whichever skill directory your CLI uses:
+Copy the `simplifeyn` folder into whichever skill directory your CLI uses:
 
-* **Antigravity CLI:** `~/.gemini/skills/feynman-debrief/`
-* **Claude Code:** `~/.claude/skills/feynman-debrief/`
-* **OpenAI Codex CLI:** `~/.agents/skills/feynman-debrief/`
-* **Cursor:** `~/.cursor/skills/feynman-debrief/`
+* **Antigravity CLI:** `~/.gemini/skills/simplifeyn/`
+* **Claude Code:** `~/.claude/skills/simplifeyn/`
+* **OpenAI Codex CLI:** `~/.agents/skills/simplifeyn/`
+* **Cursor:** `~/.cursor/skills/simplifeyn/`
 
 ---
 
@@ -80,13 +80,13 @@ Turn Feynman debriefing on or off dynamically during your session:
 
 ```bash
 # Turn ON: every subsequent code change will conclude with a Feynman Debrief
-/feynman-debrief on
+/simplifeyn on
 
 # Check whether debrief mode is currently active
-/feynman-debrief status
+/simplifeyn status
 
 # Turn OFF: return to normal output style
-/feynman-debrief off
+/simplifeyn off
 ```
 
 ### Mode 2: One-Shot Command
@@ -94,9 +94,9 @@ Turn Feynman debriefing on or off dynamically during your session:
 Run once for the latest change or a specific commit without enabling session persistence:
 
 ```bash
-/feynman-debrief
+/simplifeyn
 # or for a specific commit:
-/feynman-debrief HEAD~1
+/simplifeyn HEAD~1
 ```
 
 Or ask the agent in plain language:
@@ -137,7 +137,7 @@ cat response.txt | python3 scripts/audit_debrief.py --stdin
 ## Repository Structure
 
 ```text
-feynman-debrief/
+simplifeyn/
 |-- SKILL.md                  # Main Agent Skill specification
 |-- README.md                 # Documentation and guide
 |-- install.sh                # Universal installer
@@ -168,4 +168,4 @@ Contributions and feedback are welcome! Areas to explore:
 
 ## License
 
-[MIT](./LICENSE) (c) Julius & contributors. Use it, fork it, ship it.
+[MIT](./LICENSE) (c) 2026 Julius. Use it, fork it, ship it.

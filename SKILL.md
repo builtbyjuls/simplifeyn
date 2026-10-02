@@ -1,9 +1,9 @@
 ---
-name: feynman-debrief
+name: simplifeyn
 description: >-
   Explains code changes, PR diffs, or completed feature implementations using the Richard Feynman technique:
   physical mechanism first, tangible everyday analogy with explicit breaking points, and a 3-rung ladder
-  from kitchen-table simplicity to maintainer edge-cases. Use when asked to explain what changed or after implementing a feature.
+  from kitchen-table simplicity to maintainer edge-cases. Supports toggleable session mode via /simplifeyn on|off|status.
 disable-model-invocation: false
 license: MIT
 metadata:
@@ -11,13 +11,13 @@ metadata:
   category: "developer-tools"
 ---
 
-# Feynman Implementation Debrief
+# Simplifeyn: Implementation Debrief
 
 An Agent Skill that turns software changes and PR diffs into clear, mechanistic explanations modeled on Richard Feynman's principles of understanding: **mechanism before name**, **one tangible analogy with its exact limits**, and a **progressive ladder from kitchen table to system maintainer**.
 
 ## When to Use
 
-1. **After implementing a feature or bug fix:** When the user asks "What did you do?", "Explain the changes", or when invoked via `/feynman-debrief`.
+1. **After implementing a feature or bug fix:** When the user asks "What did you do?", "Explain the changes", or when invoked via `/simplifeyn`.
 2. **During code reviews / PR summaries:** When explaining a pull request to teammates of varying backgrounds (product managers, junior engineers, senior architects).
 3. **When verifying understanding:** When checking if a complex refactor or architectural shift actually solves the problem or merely adds defensive abstraction.
 
@@ -27,15 +27,15 @@ An Agent Skill that turns software changes and PR diffs into clear, mechanistic 
 
 This skill supports both one-shot commands and persistent session toggling:
 
-1. **Enable Persistent Mode (`/feynman-debrief on` or `feynman mode on`):**
-   - Confirm activation in one line: *"Feynman debrief mode enabled: every subsequent code change will conclude with a Feynman Debrief."*
+1. **Enable Persistent Mode (`/simplifeyn on` or `simplifeyn mode on`):**
+   - Confirm activation in one line: *"Simplifeyn mode enabled: every subsequent code change will conclude with a Feynman Debrief."*
    - Once enabled, automatically append a Feynman Debrief to the end of all future code implementations for the remainder of the session.
-2. **Disable Persistent Mode (`/feynman-debrief off` or `stop feynman mode`):**
-   - Confirm deactivation in one line: *"Feynman debrief mode disabled: returning to default output style."*
+2. **Disable Persistent Mode (`/simplifeyn off` or `stop simplifeyn mode`):**
+   - Confirm deactivation in one line: *"Simplifeyn mode disabled: returning to default output style."*
    - Stop appending debriefs automatically.
-3. **Check Status (`/feynman-debrief status`):**
+3. **Check Status (`/simplifeyn status`):**
    - Report whether persistent mode is currently ACTIVE or INACTIVE.
-4. **One-Shot Execution (`/feynman-debrief` or `/feynman-debrief once`):**
+4. **One-Shot Execution (`/simplifeyn` or `/simplifeyn once`):**
    - Debrief only the latest diff or specified code change without changing persistent session state.
 
 ## Persistence Rules
@@ -43,7 +43,7 @@ This skill supports both one-shot commands and persistent session toggling:
 When Toggle Mode is ON:
 - These rules apply to every code modification turn for the rest of the session.
 - They do not expire after a few turns and do not lapse when changing topics.
-- Deactivate only upon receiving `/feynman-debrief off` or "stop feynman mode".
+- Deactivate only upon receiving `/simplifeyn off` or "stop simplifeyn mode".
 
 ---
 

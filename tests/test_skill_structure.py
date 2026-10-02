@@ -33,7 +33,7 @@ class TestSkillStructure(unittest.TestCase):
         self.assertIsNotNone(frontmatter_match, "SKILL.md must contain valid YAML frontmatter")
 
         frontmatter = frontmatter_match.group(1)
-        self.assertIn("name: feynman-debrief", frontmatter, "Frontmatter must contain 'name: feynman-debrief'")
+        self.assertIn("name: simplifeyn", frontmatter, "Frontmatter must contain 'name: simplifeyn'")
         self.assertIn("description:", frontmatter, "Frontmatter must contain 'description:'")
 
     def test_skill_sections(self):
@@ -56,8 +56,8 @@ class TestSkillStructure(unittest.TestCase):
             content = f.read()
 
         self.assertIn("Toggle Mode", content, "SKILL.md must describe Toggle Mode")
-        self.assertIn("/feynman-debrief on", content, "SKILL.md must support '/feynman-debrief on'")
-        self.assertIn("/feynman-debrief off", content, "SKILL.md must support '/feynman-debrief off'")
+        self.assertIn("/simplifeyn on", content, "SKILL.md must support '/simplifeyn on'")
+        self.assertIn("/simplifeyn off", content, "SKILL.md must support '/simplifeyn off'")
         self.assertIn("Persistence", content, "SKILL.md must specify persistence across session turns")
 
     def test_references_exist(self):
