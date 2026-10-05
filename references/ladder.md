@@ -31,7 +31,7 @@ The ladder is a multi-tier structure that communicates software changes to diffe
 * **Core Rule:** Connect the physical picture to the exact software symbols, data structures, and state transitions.
 * **Objective:** Show how the pieces fit together and highlight the primary trade-off made.
 * **Example:**
-  > *"We moved `saveNote()` to append to a local SQLite database table before dispatching an asynchronous queue job. The UI receives an optimistic optimistic update in <10ms. Trade-off: we trade immediate consistency across devices for instant local response times."*
+  > *"We moved `saveNote()` to append to a local SQLite database table before dispatching an asynchronous queue job. The UI receives an optimistic update in <10ms. Trade-off: we trade immediate consistency across devices for instant local response times."*
 
 ---
 

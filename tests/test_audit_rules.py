@@ -55,5 +55,55 @@ class TestAuditDebrief(unittest.TestCase):
         result = audit_debrief.audit_text(good_text)
         self.assertTrue(result["passed"], f"Well-formed text should pass audit, but failed with: {result.get('errors')}")
 
+    def test_missing_what_was_left_out_fails(self):
+        import audit_debrief
+
+        text_without_section_5 = (
+            "## In One Sentence\n"
+            "Incoming requests check local memory.\n\n"
+            "## The Tangible Picture\n"
+            "A cook keeping salt on the counter.\n\n"
+            "## The Ladder\n"
+            "- Level 0: simple.\n"
+            "- Level 1: technical.\n\n"
+            "## Where the Picture Breaks\n"
+            "Breaks with multiple cooks.\n"
+        )
+        result = audit_debrief.audit_text(text_without_section_5)
+        self.assertFalse(result["passed"], "Omitting 'What Was Left Out' must fail audit")
+        self.assertIn("What Was Left Out", result["missing_sections"])
+
+    def test_flexible_headings_pass(self):
+        import audit_debrief
+
+        # Headings matching SKILL.md format: h3 with numbers
+        h3_text = (
+            "### 1. In One Sentence\n"
+            "Incoming requests check local memory.\n\n"
+            "### 2. The Tangible Picture\n"
+            "A cook keeping salt on the counter.\n\n"
+            "### 3. The Ladder\n"
+            "- Level 0: kitchen table.\n"
+            "- Level 1: practitioner.\n\n"
+            "### 4. Where the Picture Breaks\n"
+            "Breaks with multiple cooks.\n\n"
+            "### 5. What Was Left Out\n"
+            "Distributed caching was deferred.\n"
+        )
+        result = audit_debrief.audit_text(h3_text)
+        self.assertTrue(result["passed"], f"H3 numbered headings should pass audit: {result.get('errors')}")
+
+    def test_cli_file_not_found_handled(self):
+        import subprocess
+        audit_script = os.path.join(BASE_DIR, "scripts", "audit_debrief.py")
+        proc = subprocess.run(
+            [sys.executable, audit_script, "non_existent_file_12345.md"],
+            capture_output=True,
+            text=True
+        )
+        self.assertEqual(proc.returncode, 1, "CLI must exit with code 1 for non-existent file")
+        self.assertNotIn("Traceback", proc.stderr, "CLI should not output unhandled Python traceback")
+        self.assertIn("Error:", proc.stderr, "CLI should print user-friendly Error message")
+
 if __name__ == "__main__":
     unittest.main()

@@ -43,5 +43,35 @@ class TestInstaller(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, f"--check failed: {proc.stderr}")
         self.assertIn("up to date", proc.stdout.lower())
 
+    def test_check_mode_fails_when_missing_or_modified(self):
+        target_skills_dir = os.path.join(self.temp_dir, "skills")
+        # 1. Not installed yet -> should fail with exit code 1
+        proc = subprocess.run([self.installer, "--check", "--target", target_skills_dir], capture_output=True, text=True)
+        self.assertNotEqual(proc.returncode, 0, "--check must exit non-zero when target is not installed")
+
+        # 2. Install
+        subprocess.run([self.installer, "--target", target_skills_dir], check=True, capture_output=True)
+
+        # 3. Modify an installed file
+        skill_md = os.path.join(target_skills_dir, "simplifeyn", "SKILL.md")
+        with open(skill_md, "a", encoding="utf-8") as f:
+            f.write("\n# drifted\n")
+
+        proc2 = subprocess.run([self.installer, "--check", "--target", target_skills_dir], capture_output=True, text=True)
+        self.assertNotEqual(proc2.returncode, 0, "--check must exit non-zero when an installed file has drifted")
+
+    def test_permissions_and_directories_preserved(self):
+        target_skills_dir = os.path.join(self.temp_dir, "skills")
+        subprocess.run([self.installer, "--target", target_skills_dir], check=True, capture_output=True)
+
+        installed_dir = os.path.join(target_skills_dir, "simplifeyn")
+        self.assertTrue(os.path.isdir(os.path.join(installed_dir, "references")))
+        self.assertTrue(os.path.isdir(os.path.join(installed_dir, "assets")))
+        self.assertTrue(os.path.isdir(os.path.join(installed_dir, "scripts")))
+
+        diff_script = os.path.join(installed_dir, "scripts", "get-diff.sh")
+        self.assertTrue(os.path.isfile(diff_script))
+        self.assertTrue(os.access(diff_script, os.X_OK), "Installed scripts/get-diff.sh must be executable")
+
 if __name__ == "__main__":
     unittest.main()

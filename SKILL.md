@@ -95,6 +95,8 @@ Every analogy is an approximation. An explanation that pretends an analogy is pe
 ### 5. What Was Left Out
 State what was intentionally simplified or deferred in this change, so reviewers know it wasn't forgotten.
 
+See [worked-examples.md](./assets/worked-examples.md) for full before-and-after exemplar debriefs.
+
 ---
 
 ## Quality Audit Checklist

@@ -21,10 +21,11 @@ BANNED_WORDS = [
 ]
 
 REQUIRED_SECTIONS = [
-    (r"(?i)##\s+In One Sentence", "In One Sentence"),
-    (r"(?i)##\s+The (?:Tangible|Physical) Picture", "The Tangible Picture"),
-    (r"(?i)##\s+The Ladder", "The Ladder"),
-    (r"(?i)##\s+Where the Picture Breaks", "Where the Picture Breaks"),
+    (r"(?i)#{1,3}\s+(?:\d+\.\s+)?In One Sentence", "In One Sentence"),
+    (r"(?i)#{1,3}\s+(?:\d+\.\s+)?The (?:Tangible|Physical) Picture", "The Tangible Picture"),
+    (r"(?i)#{1,3}\s+(?:\d+\.\s+)?The Ladder", "The Ladder"),
+    (r"(?i)#{1,3}\s+(?:\d+\.\s+)?Where the Picture Breaks", "Where the Picture Breaks"),
+    (r"(?i)#{1,3}\s+(?:\d+\.\s+)?What Was Left Out", "What Was Left Out"),
 ]
 
 def audit_text(text: str) -> Dict[str, Any]:
@@ -44,7 +45,7 @@ def audit_text(text: str) -> Dict[str, Any]:
     for pattern, name in REQUIRED_SECTIONS:
         if not re.search(pattern, text):
             missing_sections.append(name)
-            errors.append(f"Missing required section: '## {name}'")
+            errors.append(f"Missing required section: '{name}'")
 
     # Check that ladder contains at least Level 0
     if "The Ladder" not in missing_sections:
@@ -67,8 +68,15 @@ def main():
     if sys.argv[1] == "--stdin":
         content = sys.stdin.read()
     else:
-        with open(sys.argv[1], "r", encoding="utf-8") as f:
-            content = f.read()
+        try:
+            with open(sys.argv[1], "r", encoding="utf-8") as f:
+                content = f.read()
+        except FileNotFoundError:
+            sys.stderr.write(f"Error: File '{sys.argv[1]}' not found.\n")
+            sys.exit(1)
+        except Exception as e:
+            sys.stderr.write(f"Error reading file '{sys.argv[1]}': {e}\n")
+            sys.exit(1)
 
     result = audit_text(content)
     if result["passed"]:

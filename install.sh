@@ -105,16 +105,17 @@ install_to() {
 
   cp "$SCRIPT_DIR/SKILL.md" "$dest/"
   if [ -d "$SCRIPT_DIR/references" ]; then
-    mkdir -p "$dest/references"
-    cp -r "$SCRIPT_DIR/references/"* "$dest/references/"
+    rm -rf "$dest/references"
+    cp -R "$SCRIPT_DIR/references" "$dest/"
   fi
   if [ -d "$SCRIPT_DIR/assets" ]; then
-    mkdir -p "$dest/assets"
-    cp -r "$SCRIPT_DIR/assets/"* "$dest/assets/"
+    rm -rf "$dest/assets"
+    cp -R "$SCRIPT_DIR/assets" "$dest/"
   fi
   if [ -d "$SCRIPT_DIR/scripts" ]; then
-    mkdir -p "$dest/scripts"
-    cp -r "$SCRIPT_DIR/scripts/"* "$dest/scripts/"
+    rm -rf "$dest/scripts"
+    cp -R "$SCRIPT_DIR/scripts" "$dest/"
+    chmod +x "$dest/scripts/"*
   fi
   echo "[OK] Installed $SKILL_NAME to $dest"
 }
@@ -126,19 +127,49 @@ check_in() {
     echo "[FAIL] Not installed in $dest"
     return 1
   fi
-  if cmp -s "$SCRIPT_DIR/SKILL.md" "$dest/SKILL.md"; then
-    echo "[OK] $dest is up to date"
-    return 0
-  else
-    echo "! $dest differs from source (run install.sh to update)"
+
+  if [ ! -f "$dest/SKILL.md" ] || ! cmp -s "$SCRIPT_DIR/SKILL.md" "$dest/SKILL.md"; then
+    echo "[FAIL] $dest/SKILL.md is missing or modified"
     return 1
   fi
+
+  local subdir
+  for subdir in references assets scripts; do
+    if [ -d "$SCRIPT_DIR/$subdir" ]; then
+      if [ ! -d "$dest/$subdir" ]; then
+        echo "[FAIL] $dest/$subdir directory is missing"
+        return 1
+      fi
+      local src_file
+      for src_file in "$SCRIPT_DIR/$subdir"/*; do
+        if [ -f "$src_file" ]; then
+          local rel_name
+          rel_name="$(basename "$src_file")"
+          local target_file="$dest/$subdir/$rel_name"
+          if [ ! -f "$target_file" ] || ! cmp -s "$src_file" "$target_file"; then
+            echo "[FAIL] $dest/$subdir/$rel_name is missing or modified"
+            return 1
+          fi
+        fi
+      done
+    fi
+  done
+
+  echo "[OK] $dest is up to date"
+  return 0
 }
 
+CHECK_FAILED=0
 for target in "${TARGETS[@]}"; do
   if [ "$CHECK_MODE" -eq 1 ]; then
-    check_in "$target" || true
+    if ! check_in "$target"; then
+      CHECK_FAILED=1
+    fi
   else
     install_to "$target"
   fi
 done
+
+if [ "$CHECK_MODE" -eq 1 ] && [ "$CHECK_FAILED" -ne 0 ]; then
+  exit 1
+fi
