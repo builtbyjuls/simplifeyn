@@ -20,13 +20,20 @@ BANNED_WORDS = [
     r"\bself-explanatory\b",
 ]
 
+BANNED_PREAMBLES = [
+    r"(?i)(?:^|\n)\s*(?:Sure[!,.]?|Certainly[!,.]?|Great question[!,.]?|Here is|Here's|I have (?:implemented|completed|updated|fixed)|Looking at the)",
+    r"(?i)(?:Hope this helps|Let me know if you (?:need|have)|Feel free to ask|Happy to clarify)",
+]
+
 REQUIRED_SECTIONS = [
     (r"(?i)#{1,3}\s+(?:\d+\.\s+)?In One Sentence", "In One Sentence"),
-    (r"(?i)#{1,3}\s+(?:\d+\.\s+)?The (?:Tangible|Physical) Picture", "The Tangible Picture"),
+    (r"(?i)#{1,3}\s+(?:\d+\.\s+)?The (?:Tangible\s+|Physical\s+)?Picture", "The Picture"),
     (r"(?i)#{1,3}\s+(?:\d+\.\s+)?The Ladder", "The Ladder"),
-    (r"(?i)#{1,3}\s+(?:\d+\.\s+)?Where the Picture Breaks", "Where the Picture Breaks"),
-    (r"(?i)#{1,3}\s+(?:\d+\.\s+)?What Was Left Out", "What Was Left Out"),
+    (r"(?i)(?:#{1,3}\s+(?:\d+\.\s+)?Where the Picture Breaks|\bbreaks\s+if\b|\bbreaking\s+point\b)", "Where the Picture Breaks"),
+    (r"(?i)#{1,3}\s+(?:\d+\.\s+)?(?:What Was )?Left Out", "What Was Left Out"),
 ]
+
+MAX_WORD_COUNT = 250
 
 def audit_text(text: str) -> Dict[str, Any]:
     errors: List[str] = []
@@ -41,6 +48,16 @@ def audit_text(text: str) -> Dict[str, Any]:
             banned_found.extend(matches)
             errors.append(f"Forbidden buzzword/hand-waving detected: '{clean_word}'")
 
+    # Check for banned conversational preambles and postambles
+    for pattern in BANNED_PREAMBLES:
+        if re.search(pattern, text):
+            errors.append("Conversational preamble or pleasantry detected. Start directly at the first heading and end when the debrief is complete.")
+
+    # Check word count budget
+    word_count = len(text.split())
+    if word_count > MAX_WORD_COUNT:
+        errors.append(f"Excessive verbosity: debrief word count is {word_count} (maximum allowed is {MAX_WORD_COUNT} words). Debrief is too verbose; simplify and compress.")
+
     # Check for required sections
     for pattern, name in REQUIRED_SECTIONS:
         if not re.search(pattern, text):
@@ -49,8 +66,8 @@ def audit_text(text: str) -> Dict[str, Any]:
 
     # Check that ladder contains at least Level 0
     if "The Ladder" not in missing_sections:
-        if not re.search(r"(?i)Level 0|Kitchen[- ]Table", text):
-            errors.append("The Ladder must include 'Level 0' (Kitchen-table level with zero jargon)")
+        if not re.search(r"(?i)Level 0|Kitchen[- ]Table|\bL0\b", text):
+            errors.append("The Ladder must include Level 0 / L0 (Kitchen-table level with zero jargon)")
 
     passed = len(errors) == 0
     return {

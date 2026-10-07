@@ -60,6 +60,14 @@ class TestSkillStructure(unittest.TestCase):
         self.assertIn("/simplifeyn off", content, "SKILL.md must support '/simplifeyn off'")
         self.assertIn("Persistence", content, "SKILL.md must specify persistence across session turns")
 
+    def test_brevity_constraints(self):
+        with open(self.skill_md, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("Brevity", content, "SKILL.md must have a section on Brevity")
+        self.assertIn("word", content.lower(), "SKILL.md must specify word bounds")
+        self.assertIn("preamble", content.lower(), "SKILL.md must forbid preambles")
+
     def test_references_exist(self):
         ref_dir = os.path.join(BASE_DIR, "references")
         self.assertTrue(os.path.isdir(ref_dir), "references/ directory must exist")

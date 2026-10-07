@@ -105,5 +105,67 @@ class TestAuditDebrief(unittest.TestCase):
         self.assertNotIn("Traceback", proc.stderr, "CLI should not output unhandled Python traceback")
         self.assertIn("Error:", proc.stderr, "CLI should print user-friendly Error message")
 
+    def test_excessive_verbosity_flagged(self):
+        import audit_debrief
+
+        # Generate a verbose text > 250 words
+        filler = "The mechanism operates across multiple boundaries and performs tasks repeatedly without pause. " * 30
+        verbose_text = (
+            "### 1. In One Sentence\n"
+            f"Here is what happened: {filler}\n\n"
+            "### 2. The Tangible Picture\n"
+            "A cook in a kitchen.\n\n"
+            "### 3. The Ladder\n"
+            "- Level 0: kitchen table.\n"
+            "- Level 1: practitioner.\n\n"
+            "### 4. Where the Picture Breaks\n"
+            "Breaks at scale.\n\n"
+            "### 5. What Was Left Out\n"
+            "Left out details.\n"
+        )
+        result = audit_debrief.audit_text(verbose_text)
+        self.assertFalse(result["passed"], "Debrief exceeding 250 words must fail audit for verbosity")
+        self.assertTrue(any("verbose" in err.lower() or "word count" in err.lower() for err in result["errors"]))
+
+    def test_conversational_preambles_flagged(self):
+        import audit_debrief
+
+        fluffy_text = (
+            "Sure! I have completed implementing the feature. Here is what changed:\n\n"
+            "### 1. In One Sentence\n"
+            "Incoming requests check local memory.\n\n"
+            "### 2. The Tangible Picture\n"
+            "A cook keeping salt on the counter.\n\n"
+            "### 3. The Ladder\n"
+            "- Level 0: kitchen table.\n"
+            "- Level 1: practitioner.\n\n"
+            "### 4. Where the Picture Breaks\n"
+            "Breaks with multiple cooks.\n\n"
+            "### 5. What Was Left Out\n"
+            "Deferred clustering.\n\n"
+            "Hope this helps! Let me know if you need anything else."
+        )
+        result = audit_debrief.audit_text(fluffy_text)
+        self.assertFalse(result["passed"], "Debrief with conversational preambles/postambles must fail audit")
+        self.assertTrue(any("preamble" in err.lower() or "conversational" in err.lower() or "pleasantr" in err.lower() for err in result["errors"]))
+
+    def test_lean_concise_debrief_passes(self):
+        import audit_debrief
+
+        lean_text = (
+            "### In One Sentence\n"
+            "When a server fails, we double the wait before each retry and add a random wobble so clients do not stampede at once.\n\n"
+            "### The Picture\n"
+            "A host telling guests to wait 1 minute, then 2, then 4, with a dice roll so they do not all knock at once. Breaks if clients share the same clock seed.\n\n"
+            "### The Ladder\n"
+            "- **Level 0 (Plain):** Your computer waits twice as long each time instead of pestering the busy site every second.\n"
+            "- **Level 1 (Code):** `fetchWithRetry` now uses exponential backoff with jitter. Trade-off: up to 7.5s worst-case latency to eliminate stampedes.\n"
+            "- **Level 2 (Edge):** Retries blindly on 4xx client errors; delays over 6 retries exceed 1 minute without deadline budget.\n\n"
+            "### What Was Left Out\n"
+            "Shared circuit breaker telemetry deferred to next PR.\n"
+        )
+        result = audit_debrief.audit_text(lean_text)
+        self.assertTrue(result["passed"], f"Lean debrief should pass: {result.get('errors')}")
+
 if __name__ == "__main__":
     unittest.main()

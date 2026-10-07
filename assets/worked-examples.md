@@ -39,31 +39,18 @@ This document contrasts a typical AI agent's explanation of a code change with a
 
 ---
 
-### [GOOD] The Simplifeyn Debrief Output
+### [GOOD] The Simplifeyn Debrief Output (Under 150 Words)
 
-## In One Sentence
-When a remote server fails to answer, we now double the wait time before each retry and add a random wobble of up to half a second, preventing thousands of retrying clients from hammering the server at the exact same instant.
+### 1. In One Sentence
+When a server fails, we double the wait before each retry and add a random wobble so clients do not stampede at once.
 
-## The Tangible Picture
-Imagine a crowded restaurant where the kitchen is overwhelmed and the host turns customers away at the door. If 100 angry patrons all step outside, set their phone timers for exactly 60 seconds, and simultaneously rush the front door the moment the alarm chimes, the restaurant will be swamped again immediately. Instead, each customer waits longer with each attempt (1 minute, then 2, then 4) and rolls a random die to decide when to knock, spreading out the line.
+### 2. The Tangible Picture
+A host telling turned-away guests to wait 1 minute, then 2, then 4, with a random dice roll so they do not all knock at once. Where the picture breaks: clients that share the same pseudo-random seed can synchronize anyway.
 
-## The Ladder
+### 3. The Ladder
+- **Level 0 (Kitchen Table):** Your machine waits twice as long each time instead of pestering the busy site every second.
+- **Level 1 (Practitioner):** `fetchWithRetry` now doubles delay with up to 500ms jitter, trading 7.5s worst-case latency to eliminate stampedes.
+- **Level 2 (Maintainer):** Retries all exceptions indiscriminately including 4xx errors; retries past 6 exceed 1 minute without a deadline budget.
 
-### Level 0 - Kitchen Table
-If your internet connection hiccups while loading a page, your computer used to tap the website on the shoulder every single second. Now, if the site says it's too busy, your computer waits a little, then waits twice as long, and randomly staggers its next tap so a mob of users doesn't knock at the exact same fraction of a second.
-
-### Level 1 - Practitioner
-We replaced the constant 1000ms sleep in `fetchWithRetry()` with `baseDelay = 1000 * 2^attempt` plus a random `jitter` between 0 and 500ms.
-- **Trade-off:** We increase average retry latency (worst-case wait increases from 3s to ~7.5s across 3 retries) in exchange for eliminating packet collisions and lock contention on overwhelmed upstream APIs.
-
-### Level 2 - Maintainer
-- **Invariants Preserved:** The final attempt re-throws the underlying error without sleeping.
-- **Edge Cases & Failure Modes:**
-  1. *Unbounded Delay:* If `retries` is configured above 6, delays will exceed 1 minute; production callers should enforce an absolute request deadline or timeout budget.
-  2. *Status Codes:* This catch block retries all network exceptions equally, including non-retryable 4xx client errors (e.g. 401 Unauthorized or 404 Not Found); a follow-up PR should restrict retries strictly to 5xx server errors and network resets.
-
-## Where the Picture Breaks
-The restaurant analogy assumes customers have independent clocks and minds. In software, if thousands of clients use the same pseudo-random number generator seeded with the current timestamp, their "random" wobbles can synchronize, recreating the stampede.
-
-## What Was Left Out
-Circuit breaker state across independent requests was omitted; each call calculates backoff independently rather than sharing failure telemetry globally.
+### 4. What Was Left Out
+Circuit breaker state sharing across clients was deferred.

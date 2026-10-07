@@ -60,40 +60,42 @@ When Toggle Mode is ON:
 
 ---
 
+## Brevity and Conciseness Constraints
+
+This skill is called Simplifeyn: it must simplify, not generate an essay. Follow these strict bounds:
+
+1. **Hard Word Budget:** The entire debrief must be under 150 words (hard ceiling 200 words). It must fit in a single terminal viewport without scrolling.
+2. **No Preamble, No Recap, No Closing Pleasantries:**
+   - Forbidden openers: "Sure!", "Here is what changed:", "I have implemented...", "Looking at the changes..."
+   - Forbidden closers: "Hope this helps!", "Let me know if you need anything else.", "Feel free to ask."
+   - Start immediately with the first heading. End when the last bullet is done.
+3. **One Sentence / Bullet Cap:** Every section has a strict length limit:
+   - In One Sentence: Exactly 1 sentence.
+   - The Picture & Where the Picture Breaks: 1 to 2 sentences total (state the analogy and Where the Picture Breaks in the same breath).
+   - The Ladder: Exactly 3 bullet points (1 line per rung: L0 Plain, L1 Code, L2 Edge).
+   - What Was Left Out: Exactly 1 line.
+
+---
+
 ## Core Debrief Structure
 
-Every debrief must contain these five sections:
+Output the debrief using this compact structure:
 
 ### 1. In One Sentence
-State what the system physically does differently now, without relying on buzzwords. An expert should be able to read this single line and know what changed.
-- **Rule:** Zero filler words ("basically", "simply", "obviously").
-- **Example:** *"Incoming order requests now check a local memory shelf before waking up the disk database, keeping the 100 most active items within arm's reach."*
+State what the system physically does differently now in exactly 1 sentence. Zero filler words ("basically", "simply", "obviously").
 
 ### 2. The Tangible Picture
-Provide **one master physical analogy** (a workshop, a kitchen, a mail room, a physical pipe system).
-- **Rule:** Ground the analogy in sensory physical objects. No abstract metaphors (avoid "it acts like an orchestrator").
-- See [analogies.md](./references/analogies.md) for pre-calibrated mechanical patterns.
+Provide one sensory physical analogy and state Where the Picture Breaks in 1 to 2 sentences total.
+- **Example:** *"A host telling turned-away guests to wait 1 minute, then 2, then 4, with a random dice roll so they do not all knock at once. Where the Picture Breaks: clients that share the same clock seed can synchronize anyway."*
 
 ### 3. The Ladder
-Deliver the explanation across three distinct calibration rungs:
+Deliver the explanation across three tight single-line bullets:
+- **Level 0 (Kitchen Table / L0):** 1 sentence. Zero technical terms. What a non-programmer can picture.
+- **Level 1 (Practitioner / L1):** 1 sentence. Code symbols, data structures, and the primary trade-off.
+- **Level 2 (Maintainer / L2):** 1 sentence. Invariants, failure modes, or what breaks under load.
 
-- **Level 0 (Kitchen Table):**
-  - **Audience:** A non-technical stakeholder, product manager, or a curious 10-year-old.
-  - **Constraint:** Zero technical terms (no "API", "cache", "thread", "database", "DOM"). Describe only user actions and physical consequences.
-- **Level 1 (Practitioner):**
-  - **Audience:** The code reviewer and developer working on the feature.
-  - **Content:** The actual code mechanics: which data structures, functions, and state machines changed. The primary trade-off made (e.g., memory overhead vs. read latency).
-- **Level 2 (Maintainer):**
-  - **Audience:** The on-call engineer and systems architect.
-  - **Content:** Failure modes, concurrency implications, edge cases, what happens under high load, and what alternatives were considered and rejected.
-  - See [ladder.md](./references/ladder.md) for calibration depth.
-
-### 4. Where the Picture Breaks
-Every analogy is an approximation. An explanation that pretends an analogy is perfect is intellectually dishonest.
-- Name the exact boundary where the physical picture fails to represent the software reality (e.g., race conditions, network splits, cache invalidation, silent data corruption).
-
-### 5. What Was Left Out
-State what was intentionally simplified or deferred in this change, so reviewers know it wasn't forgotten.
+### 4. What Was Left Out
+State what was intentionally simplified or deferred in 1 line.
 
 See [worked-examples.md](./assets/worked-examples.md) for full before-and-after exemplar debriefs.
 
@@ -101,9 +103,11 @@ See [worked-examples.md](./assets/worked-examples.md) for full before-and-after 
 
 ## Quality Audit Checklist
 
-Before outputting the debrief, verify against [failure-modes.md](./references/failure-modes.md):
+Before outputting the debrief, prune and verify against [failure-modes.md](./references/failure-modes.md):
 
+- [ ] **Word Budget Respected:** Entire output is under 150 words total.
+- [ ] **No Preamble or Pleasantry:** Starts directly with the first section heading; zero chat filler.
 - [ ] **No Banned Buzzwords:** Contains zero instances of *"basically"*, *"simply"*, *"obviously"*, *"trivial"*, or *"abstracted away"*.
 - [ ] **Sensory Verbs:** Uses mechanical, physical verbs (*pushes, catches, holds, drops, waits, locks*) rather than corporate hand-waving (*orchestrates, streamlines, optimizes*). See [voice.md](./references/voice.md).
-- [ ] **Analogy Limits Named:** Section 4 clearly states the boundaries of the mental model.
-- [ ] **The "Planes Don't Land" Test:** Does the change solve the actual causal problem, or is it just the appearance of a fix (e.g. wrapping an unhandled null in an empty try/catch)?
+- [ ] **Analogy Limits Named:** States the exact boundary where the mental model breaks.
+- [ ] **The "Planes Don't Land" Test:** Does the change solve the actual causal problem, or is it just defensive scaffolding?
