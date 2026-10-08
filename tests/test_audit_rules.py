@@ -167,5 +167,17 @@ class TestAuditDebrief(unittest.TestCase):
         result = audit_debrief.audit_text(lean_text)
         self.assertTrue(result["passed"], f"Lean debrief should pass: {result.get('errors')}")
 
+    def test_official_worked_example_passes(self):
+        import audit_debrief
+        worked_examples_path = os.path.join(BASE_DIR, "assets", "worked-examples.md")
+        with open(worked_examples_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        good_marker = "### [GOOD] The Simplifeyn Debrief Output"
+        self.assertIn(good_marker, content)
+        good_section = content.split(good_marker, 1)[1].strip()
+        result = audit_debrief.audit_text(good_section)
+        self.assertTrue(result["passed"], f"Official worked-example [GOOD] debrief must pass audit: {result.get('errors')}")
+
 if __name__ == "__main__":
     unittest.main()

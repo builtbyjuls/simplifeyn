@@ -25,16 +25,19 @@ When AI agents implement features or fix bugs, they default to reciting files an
 
 ## The Simplifeyn Alternative
 
-`simplifeyn` forces the AI coding agent into Richard Feynman's cognitive model:
+`simplifeyn` forces the AI coding agent into Richard Feynman's cognitive model while enforcing strict brevity (< 150 words total, zero conversational filler):
 
-1. **In One Sentence:** The physical delta in plain language. Zero buzzwords (`basically`, `simply`, `optimized`).
-2. **The Tangible Picture:** One sensory, mechanical analogy (a kitchen, a desk, a conveyor belt).
-3. **The Ladder:**
+1. **In One Sentence:** The physical delta in plain language (1 sentence). Zero buzzwords (`basically`, `simply`, `optimized`).
+2. **The Tangible Picture & Limits:** One sensory, mechanical analogy and its breaking limit in the same breath (1-2 sentences).
+3. **The Ladder:** Exactly 3 tight, single-line bullets:
    * **Level 0 (Kitchen Table):** Zero jargon. Understandable by a non-technical stakeholder or curious 10-year-old.
    * **Level 1 (Practitioner):** Code mechanics, data structures, state transitions, and real-world trade-offs.
    * **Level 2 (Maintainer):** Failure modes, invariants, concurrency, scale ceilings, and rejected alternative approaches.
-4. **Where the Picture Breaks:** Every analogy has limits. The agent explicitly states where the physical picture fails to represent software reality.
-5. **What Was Left Out:** Explicitly names what was simplified or deferred.
+4. **What Was Left Out:** Explicitly names what was simplified or deferred in 1 line.
+
+### Brevity & Anti-Verbosity Constraints
+- **Word Budget:** Hard cap under 150 words total; fits completely in a standard terminal viewport without scrolling.
+- **Zero Chat Filler:** No preambles ("Sure!", "Here is what changed:"), no postambles ("Hope this helps!"). Starts directly with the first section heading and stops after the last bullet.
 
 **-> [See a complete Before vs. After Worked Example](./assets/worked-examples.md)**
 
@@ -108,12 +111,11 @@ If you want your agent to conclude **every** feature implementation or bug fix w
 
 ```markdown
 ## Post-Implementation Debrief
-Whenever you complete a feature implementation, bug fix, or significant code modification, conclude your final response with a Feynman Debrief:
-1. In One Sentence: The physical delta without buzzwords.
-2. The Tangible Picture: One real-world mechanical analogy.
-3. The Ladder: Level 0 (zero jargon) -> Level 1 (practitioner) -> Level 2 (maintainer).
-4. Where the Picture Breaks: Exact limits of the analogy and edge cases.
-5. What Was Left Out: Deferred concerns and assumptions.
+Whenever you complete a feature implementation, bug fix, or significant code modification, conclude your final response with a lean Feynman Debrief (< 150 words, zero pleasantries or preamble):
+1. In One Sentence: The physical delta without buzzwords (1 sentence).
+2. The Tangible Picture: One mechanical analogy and where the picture breaks (1-2 sentences).
+3. The Ladder: 3 single-line rungs: Level 0 (zero jargon) -> Level 1 (practitioner) -> Level 2 (maintainer).
+4. What Was Left Out: Deferred concerns and assumptions (1 line).
 ```
 
 ---
