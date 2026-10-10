@@ -71,7 +71,7 @@ This skill is called Simplifeyn: it must simplify, not generate an essay. Follow
    - Start immediately with the first heading. End when the last bullet is done.
 3. **One Sentence / Bullet Cap:** Every section has a strict length limit:
    - In One Sentence: Exactly 1 sentence.
-   - The Picture & Where the Picture Breaks: 1 to 2 sentences total (state the analogy and Where the Picture Breaks in the same breath).
+   - The Picture & Where the Picture Breaks: 1 to 2 sentences total, accompanied by a compact 2-4 line ASCII mechanism flow diagram (`[ Input ] ---> [ Guard ] ---> [ Output ]`).
    - The Ladder: Exactly 3 bullet points (1 line per rung: L0 Plain, L1 Code, L2 Edge).
    - What Was Left Out: Exactly 1 line.
 
@@ -85,8 +85,23 @@ Output the debrief using this compact structure:
 State what the system physically does differently now in exactly 1 sentence. Zero filler words ("basically", "simply", "obviously").
 
 ### 2. The Tangible Picture
-Provide one sensory physical analogy and state Where the Picture Breaks in 1 to 2 sentences total.
-- **Example:** *"A host telling turned-away guests to wait 1 minute, then 2, then 4, with a random dice roll so they do not all knock at once. Where the Picture Breaks: clients that share the same clock seed can synchronize anyway."*
+Provide one sensory physical analogy and state Where the Picture Breaks in 1 to 2 sentences total. Include a compact 2 to 4 line ASCII mechanism flow diagram mapping the physical components to code mechanisms using pure ASCII characters (`--->`, `|`, `v`, `[ ]`):
+
+```text
+[ Physical Input ] ---> [ Inspection / Guard ] ---> [ Physical Output ]
+    (Code Source)              (Validation)             (Disk / Memory)
+```
+
+- **Example:**
+  *"A host telling turned-away guests to wait 1 minute, then 2, then 4, with a random dice roll so they do not all knock at once.*
+
+```text
+[ Server 5xx ] ---> [ Double Wait (2^n) + Wobble ] ---> [ Retry ]
+                                 |
+                   [ Max Retries? ---> Throw Error ]
+```
+
+  *Where the Picture Breaks: clients that share the same clock seed can synchronize anyway."*
 
 ### 3. The Ladder
 Deliver the explanation across three tight single-line bullets:

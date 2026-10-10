@@ -68,6 +68,16 @@ class TestSkillStructure(unittest.TestCase):
         self.assertIn("word", content.lower(), "SKILL.md must specify word bounds")
         self.assertIn("preamble", content.lower(), "SKILL.md must forbid preambles")
 
+    def test_ascii_flowchart_guideline(self):
+        with open(self.skill_md, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("ASCII", content, "SKILL.md must mention ASCII flow diagram/chart")
+        self.assertTrue(
+            any(k in content.lower() for k in ["flow diagram", "flowchart", "mechanism flow"]),
+            "SKILL.md must guide the creation of an ASCII mechanism flow/diagram"
+        )
+
     def test_references_exist(self):
         ref_dir = os.path.join(BASE_DIR, "references")
         self.assertTrue(os.path.isdir(ref_dir), "references/ directory must exist")

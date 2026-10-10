@@ -45,7 +45,15 @@ This document contrasts a typical AI agent's explanation of a code change with a
 When a server fails, we double the wait before each retry and add a random wobble so clients do not stampede at once.
 
 ### 2. The Tangible Picture
-A host telling turned-away guests to wait 1 minute, then 2, then 4, with a random dice roll so they do not all knock at once. Where the picture breaks: clients that share the same pseudo-random seed can synchronize anyway.
+A host telling turned-away guests to wait 1 minute, then 2, then 4, with a random dice roll so they do not all knock at once.
+
+```text
+[ Server 5xx Error ] ---> [ Double Delay (2^attempt) + Jitter ] ---> [ Next Attempt ]
+                                          |
+                         [ Retries Exhausted? ---> Throw Error ]
+```
+
+Where the picture breaks: clients that share the same pseudo-random seed can synchronize anyway.
 
 ### 3. The Ladder
 - **Level 0 (Kitchen Table):** Your machine waits twice as long each time instead of pestering the busy site every second.

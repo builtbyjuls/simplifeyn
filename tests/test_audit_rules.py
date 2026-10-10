@@ -179,5 +179,29 @@ class TestAuditDebrief(unittest.TestCase):
         result = audit_debrief.audit_text(good_section)
         self.assertTrue(result["passed"], f"Official worked-example [GOOD] debrief must pass audit: {result.get('errors')}")
 
+    def test_debrief_with_ascii_flowchart_passes(self):
+        import audit_debrief
+
+        flow_text = (
+            "### 1. In One Sentence\n"
+            "When a server fails, we double the wait before each retry and add a random wobble so clients do not stampede at once.\n\n"
+            "### 2. The Tangible Picture\n"
+            "A host telling turned-away guests to wait with a dice roll so they do not all knock at once.\n\n"
+            "```text\n"
+            "[ Server Error ] ---> [ Double Wait (2^n) + Jitter ] ---> [ Next Retry ]\n"
+            "                                     |\n"
+            "                       [ 3 Errors? ---> Throw Error ]\n"
+            "```\n\n"
+            "Where the Picture Breaks: clients sharing the same seed can synchronize anyway.\n\n"
+            "### 3. The Ladder\n"
+            "- **Level 0 (Plain):** Your machine waits twice as long each time instead of pestering the busy site every second.\n"
+            "- **Level 1 (Code):** `fetchWithRetry` now doubles delay with up to 500ms jitter, trading 7.5s worst-case latency to eliminate stampedes.\n"
+            "- **Level 2 (Edge):** Retries all exceptions indiscriminately including 4xx errors; retries past 6 exceed 1 minute without deadline budget.\n\n"
+            "### 4. What Was Left Out\n"
+            "Circuit breaker state sharing across clients was deferred.\n"
+        )
+        result = audit_debrief.audit_text(flow_text)
+        self.assertTrue(result["passed"], f"Debrief with ASCII flowchart must pass audit: {result.get('errors')}")
+
 if __name__ == "__main__":
     unittest.main()
