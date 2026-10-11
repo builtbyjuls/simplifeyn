@@ -86,19 +86,22 @@ State what the system physically does differently now in exactly 1 sentence. Zer
 
 ### 2. The Tangible Picture
 Provide one sensory physical analogy and state Where the Picture Breaks in 1 to 2 sentences total. Include a compact 2 to 4 line ASCII mechanism flow diagram mapping the physical components to code mechanisms using pure ASCII characters (`--->`, `|`, `v`, `[ ]`):
+- **Rule:** The diagram nodes `[ ]` MUST name the physical objects from the analogy, with the corresponding code mechanisms mapped in parentheses `( )` directly underneath. Do not draw a plain software architecture diagram; bridge the physical mental model to the code.
 
 ```text
-[ Physical Input ] ---> [ Inspection / Guard ] ---> [ Physical Output ]
-    (Code Source)              (Validation)             (Disk / Memory)
+[ Physical Object A ] ---> [ Physical Action / Gate ] ---> [ Physical Object B ]
+     (Code Source)                (Validation/Logic)             (Disk / Memory)
 ```
 
 - **Example:**
   *"A host telling turned-away guests to wait 1 minute, then 2, then 4, with a random dice roll so they do not all knock at once.*
 
 ```text
-[ Server 5xx ] ---> [ Double Wait (2^n) + Wobble ] ---> [ Retry ]
-                                 |
-                   [ Max Retries? ---> Throw Error ]
+[ Turned-Away Guest ] ---> [ Roll Dice & Wait ] ---> [ Knock on Door ]
+    (Server 5xx Error)       (2^attempt + Jitter)       (Next Retry Attempt)
+                                      |
+                      [ Out of Patience? ---> Walk Away ]
+                        (Retries Exhausted)   (Throw Error)
 ```
 
   *Where the Picture Breaks: clients that share the same clock seed can synchronize anyway."*

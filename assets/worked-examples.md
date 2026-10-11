@@ -48,9 +48,11 @@ When a server fails, we double the wait before each retry and add a random wobbl
 A host telling turned-away guests to wait 1 minute, then 2, then 4, with a random dice roll so they do not all knock at once.
 
 ```text
-[ Server 5xx Error ] ---> [ Double Delay (2^attempt) + Jitter ] ---> [ Next Attempt ]
-                                          |
-                         [ Retries Exhausted? ---> Throw Error ]
+[ Turned-Away Guest ] ---> [ Roll Dice & Wait ] ---> [ Knock on Door ]
+    (Server 5xx Error)       (2^attempt + Jitter)       (Next Retry Attempt)
+                                      |
+                      [ Out of Patience? ---> Walk Away ]
+                        (Retries Exhausted)   (Throw Error)
 ```
 
 Where the picture breaks: clients that share the same pseudo-random seed can synchronize anyway.
