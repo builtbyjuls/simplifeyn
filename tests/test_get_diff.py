@@ -77,5 +77,18 @@ class TestGetDiff(unittest.TestCase):
         self.assertNotEqual(proc.returncode, 0, "Must exit with non-zero for invalid revision")
         self.assertIn("Error:", proc.stderr)
 
+    def test_flag_argument_rejected(self):
+        hostile_file = "/tmp/test_attack_out..HEAD"
+        if os.path.exists(hostile_file):
+            os.remove(hostile_file)
+        try:
+            proc = subprocess.run([self.script, f"--output={hostile_file}"], cwd=self.temp_repo, capture_output=True, text=True)
+            self.assertNotEqual(proc.returncode, 0, "Arguments starting with '-' must be rejected")
+            self.assertIn("Error:", proc.stderr)
+            self.assertFalse(os.path.exists(hostile_file), f"Script must not create hostile file {hostile_file}")
+        finally:
+            if os.path.exists(hostile_file):
+                os.remove(hostile_file)
+
 if __name__ == "__main__":
     unittest.main()

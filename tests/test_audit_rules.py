@@ -418,8 +418,8 @@ class TestAuditDebrief(unittest.TestCase):
             "-  \"version\": \"1.0.0\"\n"
             "+  \"version\": \"1.0.1\"\n"
         )
-        res = audit_debrief.check_diff_complexity(diff)
-        self.assertFalse(res["should_debrief"], "Metadata version bump must not trigger debrief")
+        res = audit_debrief.check_diff_complexity(diff, commit_msg="chore: bump version")
+        self.assertFalse(res["should_debrief"], "Metadata version bump with chore commit prefix must not trigger debrief")
 
     def test_diff_complexity_code_logic_change_triggered(self):
         import audit_debrief
@@ -636,18 +636,51 @@ class TestAuditDebrief(unittest.TestCase):
         )
         self.assertFalse(audit_debrief.check_diff_complexity(ignore_diff)["should_debrief"], ".gitignore should be skipped")
 
-    def test_diff_complexity_string_literals_do_not_trigger_keywords(self):
+    def test_diff_complexity_small_code_and_config_diffs_trigger_debrief(self):
         import audit_debrief
-        string_diff = (
-            "diff --git a/src/ui.ts b/src/ui.ts\n"
-            "--- a/src/ui.ts\n"
-            "+++ b/src/ui.ts\n"
-            "@@ -1,1 +1,1 @@\n"
-            "-const msg = \"wait for it\";\n"
-            "+const msg = \"wait for them\";\n"
-        )
-        res = audit_debrief.check_diff_complexity(string_diff)
-        self.assertFalse(res["should_debrief"], "Diff changing 'for' inside string literal should not trigger debrief")
+        cases = [
+            ("timeout = 30 -> 0", "diff --git a/src/net.py b/src/net.py\n--- a/src/net.py\n+++ b/src/net.py\n@@ -1,1 +1,1 @@\n-timeout = 30\n+timeout = 0\n"),
+            ("max_retries = 3 -> 0", "diff --git a/src/net.py b/src/net.py\n--- a/src/net.py\n+++ b/src/net.py\n@@ -1,1 +1,1 @@\n-max_retries = 3\n+max_retries = 0\n"),
+            ("total = a + b -> a - b", "diff --git a/src/math.py b/src/math.py\n--- a/src/math.py\n+++ b/src/math.py\n@@ -1,1 +1,1 @@\n-total = a + b\n+total = a - b\n"),
+            ("n = len(xs) -> len(xs) - 1", "diff --git a/src/util.py b/src/util.py\n--- a/src/util.py\n+++ b/src/util.py\n@@ -1,1 +1,1 @@\n-n = len(xs)\n+n = len(xs) - 1\n"),
+            ("ok = age >= 18 -> age > 18", "diff --git a/src/auth.py b/src/auth.py\n--- a/src/auth.py\n+++ b/src/auth.py\n@@ -1,1 +1,1 @@\n-ok = age >= 18\n+ok = age > 18\n"),
+            ("os.chmod(p, 0o600) -> 0o777", "diff --git a/src/fs.py b/src/fs.py\n--- a/src/fs.py\n+++ b/src/fs.py\n@@ -1,1 +1,1 @@\n-os.chmod(p, 0o600)\n+os.chmod(p, 0o777)\n"),
+            ("Dockerfile USER app -> USER root", "diff --git a/Dockerfile b/Dockerfile\n--- a/Dockerfile\n+++ b/Dockerfile\n@@ -1,1 +1,1 @@\n-USER app\n+USER root\n"),
+            ("set -e -> set +e", "diff --git a/deploy.sh b/deploy.sh\n--- a/deploy.sh\n+++ b/deploy.sh\n@@ -1,1 +1,1 @@\n-set -e\n+set +e\n"),
+            ("https -> http", "diff --git a/src/api.ts b/src/api.ts\n--- a/src/api.ts\n+++ b/src/api.ts\n@@ -1,1 +1,1 @@\n-const url = \"https://x\";\n+const url = \"http://x\";\n"),
+        ]
+        for name, diff in cases:
+            res = audit_debrief.check_diff_complexity(diff)
+            self.assertTrue(res["should_debrief"], f"Small code/config diff '{name}' must trigger debrief")
+
+    def test_every_banned_word_in_file_is_caught_by_linter(self):
+        import audit_debrief
+        banned_file = os.path.join(BASE_DIR, "references", "banned-words.txt")
+        with open(banned_file, "r", encoding="utf-8") as f:
+            words = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+
+        self.assertTrue(len(words) > 0, "banned-words.txt must contain entries")
+        for word in words:
+            sample_text = (
+                "### 1. In One Sentence\n"
+                f"We {word} handle requests now.\n\n"
+                "### 2. The Tangible Picture\n"
+                "A worker sorting packages.\n\n"
+                "```text\n"
+                "[ In ] ---> [ Box ] ---> [ Out ]\n"
+                "```\n\n"
+                "Where the picture breaks: breaks on empty input.\n\n"
+                "### 3. The Ladder\n"
+                "- Level 0: Plain\n"
+                "- Level 1: Code\n"
+                "- Level 2: Maintainer\n\n"
+                "### 4. What Was Left Out\n"
+                "Nothing.\n"
+            )
+            res = audit_debrief.audit_text(sample_text)
+            self.assertFalse(res["passed"], f"Linter must fail when debrief contains banned word: '{word}'")
+            found_lower = [w.lower() for w in res["banned_words_found"]]
+            self.assertIn(word.lower(), found_lower, f"Linter must detect banned word '{word}' in banned_words_found")
 
 if __name__ == "__main__":
     unittest.main()

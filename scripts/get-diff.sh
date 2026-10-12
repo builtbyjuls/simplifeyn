@@ -25,6 +25,10 @@ run_git_show() {
 }
 
 if [ $# -gt 0 ]; then
+  if [[ "$1" == -* ]]; then
+    echo "Error: Options and flags are not supported: $1" >&2
+    exit 1
+  fi
   TARGET="$1"
 
   if [ "$TARGET" = "staged" ]; then

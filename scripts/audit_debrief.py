@@ -11,34 +11,18 @@ import re
 import sys
 from typing import Dict, List, Any
 
-BANNED_WORDS = [
-    r"\bbasically\b",
-    r"\bobviously\b",
-    r"\bsimply\b",
-    r"\bjust\b",
-    r"\btrivial\b",
-    r"\babstracted away\b",
-    r"\bunder the hood\b",  # often used as hand-waving instead of actually explaining
-    r"\bself-explanatory\b",
-    r"\boptimized\b",
-    r"\boptimizing\b",
-    r"\bstreamline\b",
-    r"\bstreamlined\b",
-    r"\bstreamlining\b",
-    r"\bseamless\b",
-    r"\bseamlessly\b",
-]
+def load_banned_words(path: str = "") -> List[str]:
+    if not path:
+        path = os.path.join(os.path.dirname(__file__), "..", "references", "banned-words.txt")
+    if not os.path.isfile(path):
+        raise FileNotFoundError(f"Required banned words reference not found: {path}")
+    with open(path, "r", encoding="utf-8") as f:
+        words = [rf"\b{line.strip()}\b" for line in f if line.strip() and not line.startswith("#")]
+    if not words:
+        raise ValueError(f"Banned words reference is empty: {path}")
+    return words
 
-# Load centralized banned words file if present
-_banned_ref = os.path.join(os.path.dirname(__file__), "..", "references", "banned-words.txt")
-if os.path.isfile(_banned_ref):
-    try:
-        with open(_banned_ref, "r", encoding="utf-8") as _f:
-            _words = [rf"\b{line.strip()}\b" for line in _f if line.strip() and not line.startswith("#")]
-            if _words:
-                BANNED_WORDS = _words
-    except Exception:
-        pass
+BANNED_WORDS = load_banned_words()
 
 BANNED_PREAMBLES = [
     r"(?i)(?:^|\n)\s*(?:Sure[!,.]?|Certainly[!,.]?|Great question[!,.]?|Here is|Here's|I have (?:implemented|completed|updated|fixed)|Looking at the)",
@@ -149,70 +133,6 @@ LOCKFILES_AND_IGNORES = {
 }
 CONFIG_OR_CI_EXTS = {".json", ".yml", ".yaml", ".toml", ".ini", ".env", ".conf"}
 
-CONTROL_FLOW_INDICATORS = [
-    r"\bdef\s+",
-    r"\bclass\s+",
-    r"\bfunction\b",
-    r"\basync\s+",
-    r"\bawait\b",
-    r"\bif\b",
-    r"\bfor\b",
-    r"\bwhile\b",
-    r"\btry\b",
-    r"\bcatch\b",
-    r"\bexcept\b",
-    r"\bswitch\b",
-    r"\bcase\b",
-    r"\breturn\b",
-    r"\bthrow\b",
-    r"\braise\b",
-]
-
-SECURITY_AND_STATE_INDICATORS = [
-    r"\b(true|false|True|False)\b",
-    r"\bauth\b",
-    r"\bssl\b",
-    r"\btls\b",
-    r"\btoken\b",
-    r"\bsecret\b",
-    r"\bpassword\b",
-    r"\badmin\b",
-    r"\bmutex\b",
-    r"\block\b",
-    r"\bcache\b",
-    r"\bstate\b",
-    r"\b[A-Z][A-Z0-9_]{2,}\s*=",
-]
-
-CONFIG_RISK_INDICATORS = [
-    r"\b(true|false|True|False)\b",
-    r"\bauth\b",
-    r"\bssl\b",
-    r"\btls\b",
-    r"\btoken\b",
-    r"\bsecret\b",
-    r"\bpassword\b",
-    r"\badmin\b",
-    r"\btests?\b",
-    r"\bscripts?\b",
-    r"\brun\b",
-    r"\bbuild\b",
-    r"\bci\b",
-    r"\bdeploy\b",
-    r"\bexec\b",
-    r"\bcmd\b",
-    r"\bcommand\b",
-    r"\bpreinstall\b",
-    r"\bpostinstall\b",
-    r"\bport\b",
-    r"\bhost\b",
-    r"\bendpoint\b",
-    r"\burl\b",
-    r"\benv\b",
-    r"\bdependencies\b",
-    r"\bdevdependencies\b",
-    r"\b[A-Z][A-Z0-9_]{2,}\s*=",
-]
 
 def check_diff_complexity(diff_text: str, commit_msg: str = "") -> Dict[str, Any]:
     # 1. Commit message convention heuristic
@@ -225,12 +145,12 @@ def check_diff_complexity(diff_text: str, commit_msg: str = "") -> Dict[str, Any
                 "action": "skip",
                 "reason": f"Commit message type '{prefix}' indicates non-behavioral or maintenance change.",
             }
-        if re.match(r"^(feat|perf)(\([a-z0-9_-]+\))?:\s*", cm_lower):
+        if re.match(r"^(feat|perf|fix|refactor)(\([a-z0-9_-]+\))?:\s*", cm_lower):
             prefix = cm_lower.split(":")[0]
             return {
                 "should_debrief": True,
                 "action": "debrief",
-                "reason": f"Commit message type '{prefix}' indicates behavioral or performance change.",
+                "reason": f"Commit message type '{prefix}' indicates behavioral or code change.",
             }
 
     # 2. Extract changed files from diff headers
@@ -247,8 +167,6 @@ def check_diff_complexity(diff_text: str, commit_msg: str = "") -> Dict[str, Any
                 if path and path != "/dev/null":
                     files_changed.add(path)
 
-    has_config_or_ci = False
-    has_dedicated_ci_pipeline = False
     if files_changed:
         all_docs_or_locks = True
         for path in files_changed:
@@ -257,10 +175,7 @@ def check_diff_complexity(diff_text: str, commit_msg: str = "") -> Dict[str, Any
             if ext in DOCS_EXTS or base in LOCKFILES_AND_IGNORES or base.endswith(".lock"):
                 continue
             all_docs_or_locks = False
-            if ext in CONFIG_OR_CI_EXTS:
-                has_config_or_ci = True
-            if ".github" in path or ".circleci" in path:
-                has_dedicated_ci_pipeline = True
+            break
 
         if all_docs_or_locks:
             return {
@@ -270,16 +185,15 @@ def check_diff_complexity(diff_text: str, commit_msg: str = "") -> Dict[str, Any
             }
 
     # 3. Analyze modified lines
-    added_or_removed = []
     has_non_comment_content = False
     for line in diff_text.splitlines():
         if (line.startswith("+") and not line.startswith("+++")) or (line.startswith("-") and not line.startswith("---")):
             content_line = line[1:].strip()
             if content_line:
-                added_or_removed.append(content_line)
                 stripped = re.sub(r"^\s*(?://|#|/\*|\*).*$", "", content_line).strip()
                 if stripped:
                     has_non_comment_content = True
+                    break
 
     if not has_non_comment_content:
         return {
@@ -288,65 +202,11 @@ def check_diff_complexity(diff_text: str, commit_msg: str = "") -> Dict[str, Any
             "reason": "Diff contains only comments or whitespace changes.",
         }
 
-    if has_dedicated_ci_pipeline:
-        return {
-            "should_debrief": True,
-            "action": "debrief",
-            "reason": "CI pipeline modification.",
-        }
-
-    if has_config_or_ci:
-        for line in added_or_removed:
-            stripped = re.sub(r"^\s*(?://|#|/\*|\*).*$", "", line).strip()
-            if not stripped:
-                continue
-            for indicator in CONFIG_RISK_INDICATORS:
-                if re.search(indicator, stripped, flags=re.IGNORECASE if not indicator.startswith(r"\b[A-Z]") else 0):
-                    return {
-                        "should_debrief": True,
-                        "action": "debrief",
-                        "reason": "Configuration, runtime settings, or dependency script modification.",
-                    }
-        if len(added_or_removed) <= 4:
-            return {
-                "should_debrief": False,
-                "action": "skip",
-                "reason": "Configuration metadata change with zero runtime or script logic shifts.",
-            }
-
-    has_logic = False
-    for line in added_or_removed:
-        stripped = re.sub(r"^\s*(?://|#|/\*|\*).*$", "", line).strip()
-        if not stripped:
-            continue
-        # Security, state, boolean, or constant indicators
-        for indicator in SECURITY_AND_STATE_INDICATORS:
-            if re.search(indicator, stripped, flags=re.IGNORECASE if not indicator.startswith(r"\b[A-Z]") else 0):
-                has_logic = True
-                break
-        if has_logic:
-            break
-        # Strip string literals so words inside quotes (e.g. "wait for it") don't match control flow keywords
-        line_code_only = re.sub(r'"(?:\\.|[^"\\])*"', '""', stripped)
-        line_code_only = re.sub(r"'(?:\\.|[^'\\])*'", "''", line_code_only)
-        for indicator in CONTROL_FLOW_INDICATORS:
-            if re.search(indicator, line_code_only, flags=re.IGNORECASE):
-                has_logic = True
-                break
-        if has_logic:
-            break
-
-    if len(added_or_removed) <= 4 and not has_logic:
-        return {
-            "should_debrief": False,
-            "action": "skip",
-            "reason": "Diff is small (< 5 lines) with no structural logic or control flow shifts.",
-        }
-
+    # For code and config files, do not skip by size; any substantive change triggers debrief
     return {
         "should_debrief": True,
         "action": "debrief",
-        "reason": "Diff introduces non-trivial logic, state changes, or behavioral modifications.",
+        "reason": "Diff modifies code, configuration, or runtime behavior.",
     }
 
 def main():

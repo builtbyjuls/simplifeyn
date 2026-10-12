@@ -20,16 +20,16 @@ Feynman explained physics through physical, bodily mechanics. In software, code 
 
 ## 2. Banned Words (Measurement, Not Taste)
 
-Richard Feynman maintained that if you cannot explain something in plain words without relying on hand-waving crutches, you do not truly understand it. See [banned-words.txt](./banned-words.txt) for the full machine-enforced blocklist.
+Simplifeyn adopts this as a core design principle: if you cannot explain something in plain words without relying on hand-waving crutches, you do not truly understand its causal mechanism. See [banned-words.txt](./banned-words.txt) for the complete canonical blocklist enforced by the linter.
 
-The following words are **strictly banned** in a Feynman debrief:
+The canonical banned words and crutches:
 
-* [BANNED] **"Basically"**: The universal signal that the speaker doesn't know the exact mechanism and is substituting a fuzzy impression.
+* [BANNED] **"Basically"**: The universal signal that the speaker does not know the exact mechanism and is substituting a fuzzy impression.
 * [BANNED] **"Simply" / "Just"**: Downplays real difficulty. If something takes 4 hours of debugging, it is never "simply a matter of changing a flag."
 * [BANNED] **"Obviously"**: If it were obvious, nobody would need an explanation. It alienates learners and blinds experts.
 * [BANNED] **"Trivial"**: An assertion of intellectual ego that adds zero pedagogical value.
 * [BANNED] **"Abstracted away" / "Under the hood"**: Hides where the work actually went. Name the machine that does the work.
-* [BANNED] **"Optimized" / "Streamlined"**: Empty corporate buzzwords that obscure concrete engineering trade-offs.
+* [BANNED] **"Optimized" / "Streamlined" / "Seamless" / "Seamlessly" / "Self-explanatory"**: Empty buzzwords that obscure concrete engineering trade-offs.
 
 ---
 

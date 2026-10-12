@@ -80,6 +80,39 @@ class TestSkillStructure(unittest.TestCase):
             any(k in content.lower() for k in ["flow diagram", "flowchart", "mechanism flow"]),
             "SKILL.md must guide the creation of an ASCII mechanism flow/diagram"
         )
+        self.assertTrue(
+            "2 to 5" in content or "2-5" in content,
+            "SKILL.md must specify 2 to 5 line ASCII mechanism flow diagram"
+        )
+
+        # Check all diagram blocks in SKILL.md and assets/worked-examples.md
+        for file_path in [self.skill_md, os.path.join(BASE_DIR, "assets", "worked-examples.md")]:
+            with open(file_path, "r", encoding="utf-8") as f:
+                fc = f.read()
+            diagram_blocks = re.findall(r"```text\s*\n([\s\S]*?)```", fc)
+            for block in diagram_blocks:
+                if "[" in block and "--->" in block:
+                    lines = [ln for ln in block.strip().splitlines() if ln.strip()]
+                    self.assertTrue(
+                        2 <= len(lines) <= 5,
+                        f"Diagram in {os.path.basename(file_path)} must have 2-5 lines (found {len(lines)} lines):\n{block}"
+                    )
+
+    def test_banned_words_missing_fails_loudly(self):
+        import subprocess
+        code = (
+            "import sys, os; "
+            f"sys.path.insert(0, {repr(os.path.join(BASE_DIR, 'scripts'))}); "
+            "import audit_debrief; "
+            "audit_debrief.load_banned_words('/nonexistent/path/banned-words.txt')"
+        )
+        proc = subprocess.run(
+            ["python3", "-c", code],
+            capture_output=True,
+            text=True
+        )
+        self.assertNotEqual(proc.returncode, 0, "audit_debrief must fail loudly if banned-words.txt is missing")
+        self.assertIn("FileNotFoundError", proc.stderr)
 
     def test_analogy_lenses_and_fallback_support(self):
         with open(self.skill_md, "r", encoding="utf-8") as f:

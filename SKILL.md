@@ -62,10 +62,11 @@ Not every code change warrants a full Feynman debrief. Over-explaining a 1-line 
 
 ### Skip Criteria (Do NOT Debrief)
 Skip the Feynman debrief when the change matches any of these conditions:
-1. **Documentation, Lockfiles, and Ignores Only:** Changes touch only documentation (`.md`, `.txt`, `.rst`), package lockfiles (`package-lock.json`, `pnpm-lock.yaml`, `Cargo.lock`), or repository ignores (`.gitignore`, `.editorconfig`, `LICENSE`). Changes to runtime configs (`.json`, `.yml`, `.yaml`, `.toml`) containing logic, security flags, or build/CI commands must be debriefed.
-2. **Cosmetic and Styling:** Pure formatting, whitespace, comment clarifications, lint fixes, or variable renames without behavioral shifts.
-3. **Trivial One-Liners:** Modifying a static display string or comment without architectural consequence.
-4. **Conventional Commit Signals:** Commits prefixed with `docs:`, `chore:`, `style:`, `ci:`, `build:`, or trivial `fix(typo):`.
+1. **Documentation, Lockfiles, and Ignores Only:** Changes touch only documentation (`.md`, `.txt`, `.rst`), package lockfiles (`package-lock.json`, `pnpm-lock.yaml`, `Cargo.lock`), or repository ignores (`.gitignore`, `.editorconfig`, `LICENSE`).
+2. **Cosmetic and Styling:** Pure formatting, whitespace changes, or comment-only edits with zero modifications to executable statements.
+3. **Conventional Commit Signals:** Commits prefixed with `docs:`, `chore:`, or `style:`.
+
+> **Note on Code & Config:** Code and configuration files are **never skipped by size**. Even a 1-line edit to logic, conditions (`age >= 18` vs `age > 18`), arithmetic (`+` vs `-`), timeouts (`timeout = 0`), permissions (`chmod 0o777`), user privileges (`USER root`), or URLs (`http` vs `https`) alters runtime behavior and warrants a debrief.
 
 **Behavior When Skipped:** Output a standard concise summary sentence followed by:
 `[Simplifeyn debrief skipped: cosmetic/trivial change without causal mechanism shift]`
@@ -84,7 +85,7 @@ Always produce a full Feynman debrief when:
 ## The Workflow
 
 1. **Inspect the Diff:**
-   Run `git diff` (or `./scripts/get-diff.sh` if available) to understand the concrete state transitions and data flows that changed.
+   Run `git diff` (e.g. `git diff HEAD~1` or `git diff --cached`) directly in the project repository as the primary method. If `simplifeyn` is installed or cloned, you can alternatively locate and execute `get-diff.sh` (e.g. `$(find ~/.gemini/skills ~/.claude/skills ~/.agents/skills -name get-diff.sh 2>/dev/null | head -n1)` or `<skill-dir>/scripts/get-diff.sh`).
 2. **Isolate the Causal Mechanism:**
    Ask: *If electricity and bits were physical water or gears, what physically moved differently before vs. after this change?*
 3. **Format the Response:**
@@ -105,7 +106,7 @@ This skill is called Simplifeyn: it must simplify, not generate an essay. Follow
    - Start immediately with the first heading (Section 1). Conclude after Section 4 (What Was Left Out) and the lens exploration footer without conversational sign-offs.
 3. **One Sentence / Bullet Cap:** Every section has a strict length limit:
    - In One Sentence: Exactly 1 sentence.
-   - The Picture & Where the Picture Breaks: 1 to 2 sentences total, accompanied by a compact 2-4 line ASCII mechanism flow diagram (`[ Input ] ---> [ Guard ] ---> [ Output ]`).
+   - The Picture & Where the Picture Breaks: 1 to 2 sentences total, accompanied by a compact 2-5 line ASCII mechanism flow diagram (`[ Input ] ---> [ Guard ] ---> [ Output ]`).
    - The Ladder: Exactly 3 bullet points (1 line per rung: L0 Plain, L1 Code, L2 Edge).
    - What Was Left Out: Exactly 1 line.
 
@@ -119,7 +120,7 @@ Output the debrief using this compact structure:
 State what the system physically does differently now in exactly 1 sentence. Zero filler words ("basically", "simply", "obviously").
 
 ### 2. The Tangible Picture
-Provide one sensory physical analogy and state Where the Picture Breaks in 1 to 2 sentences total. Include a compact 2 to 4 line ASCII mechanism flow diagram mapping the physical components to code mechanisms using pure ASCII characters (`--->`, `|`, `v`, `[ ]`):
+Provide one sensory physical analogy and state Where the Picture Breaks in 1 to 2 sentences total. Include a compact 2 to 5 line ASCII mechanism flow diagram mapping the physical components to code mechanisms using pure ASCII characters (`--->`, `|`, `v`, `[ ]`):
 - **Rule:** The diagram nodes `[ ]` MUST name the physical objects from the analogy, with the corresponding code mechanisms mapped in parentheses `( )` directly underneath. Do not draw a plain software architecture diagram; bridge the physical mental model to the code.
 
 ```text
@@ -174,7 +175,7 @@ Before outputting the debrief, prune and verify against [failure-modes.md](./ref
 
 - [ ] **Word Budget Respected:** Explanatory prose is under 150 words (excluding diagram block and headings; hard ceiling 220 total words).
 - [ ] **No Preamble or Pleasantry:** Starts directly with the first section heading; zero chat filler.
-- [ ] **No Banned Buzzwords:** Contains zero instances of *"basically"*, *"simply"*, *"obviously"*, *"trivial"*, *"optimized"*, *"streamlined"*, or *"abstracted away"*.
+- [ ] **No Banned Buzzwords:** Contains zero instances of hand-waving crutches or empty buzzwords listed in [banned-words.txt](./references/banned-words.txt) (*basically*, *simply*, *just*, *obviously*, *trivial*, *optimized*, *streamlined*, *under the hood*, *seamless*, *self-explanatory*, *abstracted away*).
 - [ ] **Sensory Verbs:** Uses mechanical, physical verbs (*pushes, catches, holds, drops, waits, locks*) rather than corporate hand-waving (*orchestrates, streamlines, optimizes*). See [voice.md](./references/voice.md).
 - [ ] **ASCII Mechanism Flow:** Contains a fenced pure-ASCII flow mapping physical analogy objects in `[ ]` to code mechanisms in `( )` underneath.
 - [ ] **Complete Ladder:** Contains exactly 3 single-line rungs: Level 0 (Plain), Level 1 (Code & trade-offs), and Level 2 (Invariants & failure modes).
