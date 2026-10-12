@@ -17,8 +17,9 @@ if [ -z "$SCRIPT_DIR" ] || [ ! -f "$SCRIPT_DIR/SKILL.md" ]; then
     fi
   }
   trap cleanup EXIT INT TERM
+  REPO_SOURCE="${SIMPLIFEYN_REPO_SOURCE:-https://github.com/builtbyjuls/simplifeyn.git}"
   if command -v git >/dev/null 2>&1; then
-    git clone --depth 1 https://github.com/builtbyjuls/simplifeyn.git "$TMP_CLONE_DIR" >/dev/null 2>&1
+    git clone --depth 1 "$REPO_SOURCE" "$TMP_CLONE_DIR" >/dev/null 2>&1
     SCRIPT_DIR="$TMP_CLONE_DIR"
   elif command -v curl >/dev/null 2>&1 && command -v tar >/dev/null 2>&1; then
     curl -fsSL https://github.com/builtbyjuls/simplifeyn/archive/refs/heads/main.tar.gz | tar -xz -C "$TMP_CLONE_DIR" --strip-components=1

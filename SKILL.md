@@ -47,6 +47,7 @@ When Toggle Mode is ON:
 - These rules apply to every code modification turn for the rest of the session.
 - They do not expire after a few turns and do not lapse when changing topics.
 - Deactivate only upon receiving `/simplifeyn off` or "stop simplifeyn mode".
+- **Note on Session State:** Agent Skills are instructions provided to the AI model, not persistent background daemons. Session toggling (`/simplifeyn on`) is an in-context behavioral instruction (best-effort across long contexts). For guaranteed repository-wide debriefs across every new session, use **Mode 4: Always-On Project Rule** in `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`.
 
 ---
 
@@ -67,7 +68,7 @@ When Toggle Mode is ON:
 
 This skill is called Simplifeyn: it must simplify, not generate an essay. Follow these strict bounds:
 
-1. **Hard Word Budget:** The entire debrief must be under 150 words (hard ceiling 200 words). It must fit in a single terminal viewport without scrolling.
+1. **Hard Word Budget:** Target under 150 words of explanatory prose (excluding markdown headers and fenced ASCII flow blocks; hard ceiling: 220 words total). Must fit in a single terminal viewport without scrolling.
 2. **No Preamble, No Recap, No Closing Pleasantries:**
    - Forbidden openers: "Sure!", "Here is what changed:", "I have implemented...", "Looking at the changes..."
    - Forbidden closers: "Hope this helps!", "Let me know if you need anything else.", "Feel free to ask."
@@ -141,9 +142,11 @@ Users can select a preferred physical domain using `--as=<theme>` or `/simplifey
 
 Before outputting the debrief, prune and verify against [failure-modes.md](./references/failure-modes.md):
 
-- [ ] **Word Budget Respected:** Entire output is under 150 words total.
+- [ ] **Word Budget Respected:** Explanatory prose is under 150 words (excluding diagram block and headings; hard ceiling 220 total words).
 - [ ] **No Preamble or Pleasantry:** Starts directly with the first section heading; zero chat filler.
-- [ ] **No Banned Buzzwords:** Contains zero instances of *"basically"*, *"simply"*, *"obviously"*, *"trivial"*, or *"abstracted away"*.
+- [ ] **No Banned Buzzwords:** Contains zero instances of *"basically"*, *"simply"*, *"obviously"*, *"trivial"*, *"optimized"*, *"streamlined"*, or *"abstracted away"*.
 - [ ] **Sensory Verbs:** Uses mechanical, physical verbs (*pushes, catches, holds, drops, waits, locks*) rather than corporate hand-waving (*orchestrates, streamlines, optimizes*). See [voice.md](./references/voice.md).
+- [ ] **ASCII Mechanism Flow:** Contains a fenced pure-ASCII flow mapping physical analogy objects in `[ ]` to code mechanisms in `( )` underneath.
+- [ ] **Complete Ladder:** Contains exactly 3 single-line rungs: Level 0 (Plain), Level 1 (Code & trade-offs), and Level 2 (Invariants & failure modes).
 - [ ] **Analogy Limits Named:** States the exact boundary where the mental model breaks.
 - [ ] **The "Planes Don't Land" Test:** Does the change solve the actual causal problem, or is it just defensive scaffolding?

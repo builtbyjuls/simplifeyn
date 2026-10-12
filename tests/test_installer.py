@@ -77,10 +77,12 @@ class TestInstaller(unittest.TestCase):
         target_skills_dir = os.path.join(self.temp_dir, "skills")
         with open(self.installer, "r", encoding="utf-8") as f:
             script_text = f.read()
+        env = {**os.environ, "SIMPLIFEYN_REPO_SOURCE": BASE_DIR}
         proc = subprocess.run(
             ["bash", "-s", "--", "--target", target_skills_dir],
             input=script_text,
             cwd=BASE_DIR,
+            env=env,
             capture_output=True,
             text=True
         )
@@ -92,10 +94,12 @@ class TestInstaller(unittest.TestCase):
         target_skills_dir = os.path.join(self.temp_dir, "skills")
         with open(self.installer, "r", encoding="utf-8") as f:
             script_text = f.read()
+        env = {**os.environ, "SIMPLIFEYN_REPO_SOURCE": BASE_DIR}
         proc = subprocess.run(
             ["bash", "-s", "--", "--target", target_skills_dir],
             input=script_text,
             cwd=self.temp_dir,
+            env=env,
             capture_output=True,
             text=True
         )

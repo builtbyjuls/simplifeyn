@@ -26,10 +26,10 @@ When AI agents implement features or fix bugs, they default to reciting files an
 
 ## The Simplifeyn Alternative
 
-`simplifeyn` forces the AI coding agent into Richard Feynman's cognitive model while enforcing strict brevity (< 150 words total, zero conversational filler):
+`simplifeyn` forces the AI coding agent into Richard Feynman's cognitive model while enforcing strict brevity (< 150 prose words, zero conversational filler):
 
-1. **In One Sentence:** The physical delta in plain language (1 sentence). Zero buzzwords (`basically`, `simply`, `optimized`).
-2. **The Tangible Picture & Limits:** One sensory, mechanical analogy and its breaking limit in the same breath (1-2 sentences).
+1. **In One Sentence:** The physical delta in plain language (1 sentence). Zero buzzwords (`basically`, `simply`, `optimized`, `streamlined`).
+2. **The Tangible Picture & Limits:** One sensory, mechanical analogy, ASCII flow diagram, and its breaking limit in the same breath (1-2 sentences).
 3. **The Ladder:** Exactly 3 tight, single-line bullets:
    * **Level 0 (Kitchen Table):** Zero jargon. Understandable by a non-technical stakeholder or curious 10-year-old.
    * **Level 1 (Practitioner):** Code mechanics, data structures, state transitions, and real-world trade-offs.
@@ -37,7 +37,7 @@ When AI agents implement features or fix bugs, they default to reciting files an
 4. **What Was Left Out:** Explicitly names what was simplified or deferred in 1 line.
 
 ### Brevity & Anti-Verbosity Constraints
-- **Word Budget:** Hard cap under 150 words total; fits completely in a standard terminal viewport without scrolling.
+- **Word Budget:** Target < 150 words of explanatory prose (excluding diagram block & headings; hard ceiling 220 total words). Fits completely in a standard terminal viewport without scrolling.
 - **Zero Chat Filler:** No preambles ("Sure!", "Here is what changed:"), no postambles ("Hope this helps!"). Starts directly with the first section heading and stops after the last bullet.
 
 **-> [See a complete Before vs. After Worked Example](./assets/worked-examples.md)**
@@ -107,6 +107,8 @@ Turn Feynman debriefing on or off dynamically during your session:
 # Turn OFF: return to normal output style
 /simplifeyn off
 ```
+
+> **Note on Session State:** Agent Skills provide instructions to your AI coding agent, not an OS background process. Mode 1 is an in-session instruction (best-effort across long context windows). For a guaranteed, repository-wide rule across all sessions and agent restarts, use **Mode 4: Always-On Project Rule** below.
 
 ### Mode 2: Themed Lenses (`as <theme>` or `--as=<theme>`)
 

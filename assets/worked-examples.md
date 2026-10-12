@@ -39,7 +39,7 @@ This document contrasts a typical AI agent's explanation of a code change with a
 
 ---
 
-### [GOOD] The Simplifeyn Debrief Output (Under 150 Words)
+### [GOOD] The Simplifeyn Debrief Output (< 150 Prose Words)
 
 ### 1. In One Sentence
 When a server fails, we double the wait before each retry and add a random wobble so clients do not stampede at once.
