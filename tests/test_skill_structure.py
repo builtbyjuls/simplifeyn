@@ -49,6 +49,7 @@ class TestSkillStructure(unittest.TestCase):
             "The Ladder",
             "Where the Picture Breaks",
             "The Ice-Water Test",
+            "Where the Machine Snaps",
             "Quality Audit Checklist",
             "Always-On Project Rule",
         ]
@@ -64,6 +65,16 @@ class TestSkillStructure(unittest.TestCase):
             readme_content = f.read()
         self.assertIn("Ice-Water Test", readme_content, "README.md must document The Ice-Water Test")
         self.assertIn("Challenger", readme_content, "README.md must connect Ice-Water Test to Feynman's Challenger demonstration")
+
+    def test_where_machine_snaps_documented(self):
+        with open(self.skill_md, "r", encoding="utf-8") as f:
+            skill_content = f.read()
+        self.assertIn("Where the Machine Snaps", skill_content, "SKILL.md must document Where the Machine Snaps")
+
+        with open(self.readme_md, "r", encoding="utf-8") as f:
+            readme_content = f.read()
+        self.assertIn("Where the Machine Snaps", readme_content, "README.md must document Where the Machine Snaps")
+        self.assertIn("Boundary Condition", readme_content, "README.md must explain boundary conditions under Feynman philosophy")
 
     def test_toggleable_support(self):
         with open(self.skill_md, "r", encoding="utf-8") as f:

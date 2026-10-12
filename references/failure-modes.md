@@ -49,3 +49,11 @@ In his 1974 Caltech address *Cargo Cult Science*, Feynman described South Sea is
 * **The Trap:** Offering pure theoretical claims without giving the developer a physical action to observe the mechanism.
 * [BAD]: *"We optimized request lifecycle scheduling by wrapping invocations in an optimistic debounce window."*
 * [FEYNMAN FIX]: *"Open browser DevTools Network tab, click 'Save' twice within 300ms, and verify only one HTTP POST is dispatched while the button disables immediately."*
+
+---
+
+### Failure Mode 7: The Illusion of Infinite Durability (Hiding Where the Machine Snaps)
+
+* **The Trap:** Pretending a code change works unconditionally, concealing the exact physical breaking threshold from the developer.
+* [BAD]: *"This rate limiter protects downstream microservices from getting overloaded."*
+* [FEYNMAN FIX]: *"This holds a token bucket in process memory; it protects single instances up to 500 req/s, but snaps if the server restarts or if you run multiple instances behind a load balancer without Redis sharing."*

@@ -42,10 +42,10 @@ This document contrasts a typical AI agent's explanation of a code change with a
 ### [GOOD] The Simplifeyn Debrief Output
 
 ### 1. In One Sentence
-When network requests drop, we double the wait before each retry with random jitter so clients do not stampede at once.
+On network failure, retry delays double with random jitter to prevent client stampedes.
 
 ### 2. The Tangible Picture
-A host telling turned-away guests to wait with a dice roll so they do not all knock at once.
+A host telling turned-away guests to wait with a dice roll so they do not all knock together.
 
 ```text
 [ Turned-Away Guest ] ---> [ Roll Dice & Wait ] ---> [ Knock on Door ]
@@ -55,18 +55,21 @@ A host telling turned-away guests to wait with a dice roll so they do not all kn
                     (Retries Exhausted)   (Throw Error)
 ```
 
-Where the picture breaks: clients sharing a seed can synchronize anyway.
+Where the picture breaks: breaks if clients share a clock seed.
 
 ### 3. The Ladder
-- **Level 0 (Kitchen Table):** Your machine waits twice as long each time instead of pestering the busy site constantly.
-- **Level 1 (Practitioner):** `fetchWithRetry` doubles delay with up to 500ms jitter, trading 4.0s worst-case latency to prevent stampedes.
-- **Level 2 (Maintainer):** Retries only transport network failures; HTTP 4xx/5xx responses resolve normally without retries unless checking `res.ok`.
+- **Level 0 (Kitchen Table):** Your machine waits twice as long each time instead of pestering the site.
+- **Level 1 (Practitioner):** `fetchWithRetry` doubles delay with 500ms jitter, trading 4.0s latency to stop stampedes.
+- **Level 2 (Maintainer):** Retries transport failures only; 4xx/5xx responses resolve normally without retries.
 
 ### 4. The Ice-Water Test
-Throttle DevTools Network to 'Offline', trigger `fetchWithRetry('/api')`, and watch the console delay double before failing.
+Throttle DevTools to Offline, trigger request, and observe console retry delay double before failing.
 
-### 5. What Was Left Out
-Circuit breaker state sharing across clients was deferred.
+### 5. Where the Machine Snaps
+Snaps on non-idempotent POST calls, duplicating charges without an idempotency key.
+
+### 6. What Was Left Out
+Circuit breaker telemetry across instances was deferred.
 
 Explore other lenses: /simplifeyn as transit | as workshop | as gaming
 

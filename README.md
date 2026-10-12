@@ -34,16 +34,19 @@ When AI agents implement features or fix bugs, they default to reciting files an
    * **Level 1 (Practitioner):** Code mechanics, data structures, state transitions, and real-world trade-offs.
    * **Level 2 (Maintainer):** Failure modes, invariants, concurrency, scale ceilings, and rejected alternative approaches.
 4. **The Ice-Water Test:** 1 physical sensory action in the browser, terminal, or DevTools to watch the mechanism work right now (1 sentence).
-5. **What Was Left Out:** Explicitly names what was simplified or deferred in 1 line.
+5. **Where the Machine Snaps:** The exact code stress boundary, concurrency race, or prompt-stacking failure limit (1 sentence).
+6. **What Was Left Out:** Explicitly names what was simplified or deferred in 1 line.
 
-### The Feynman Philosophy: The "Ice-Water Test"
+### The Feynman Philosophy: Experiments & Physical Boundaries
 
-During the 1986 Rogers Commission hearing investigating the Space Shuttle Challenger disaster, NASA officials and contractors presented dense statistical models and hundreds of pages of engineering jargon. Richard Feynman cut through the noise with a single physical experiment: he clamped a piece of the shuttle's rubber O-ring and dunked it into a simple glass of ice water sitting on his desk. When unclamped, the cold rubber remained stiff and failed to recover.
+Richard Feynman's approach to science and engineering rested on two immutable foundations:
 
-Feynman lived by the experimental principle:
-> *"It doesn't matter how beautiful your theory is, it doesn't matter how smart you are. If it doesn't agree with experiment, it's wrong."*
+1. **The Physical Experiment ("The Ice-Water Test"):** During the 1986 Rogers Commission hearing on the Challenger disaster, NASA officials presented dense statistical risk models. Feynman cut through the bureaucratic fog with a simple tabletop experiment: he clamped a sample of the shuttle's rubber O-ring seal and dunked it into a glass of ice water at his desk. When released, the stiff rubber failed to rebound. In under ten seconds, everyone saw the causal truth.
+   > *"It doesn't matter how beautiful your theory is, it doesn't matter how smart you are. If it doesn't agree with experiment, it's wrong."*
+   For vibe coders directing AI coding agents, theoretical jargon ("optimizes mutation lifecycle") is unprovable without physical verification. **The Ice-Water Test** requires the AI to give you one concrete, 10-second sensory action (e.g., throttling DevTools to offline, clicking twice rapidly, inspecting a network panel) to witness the mechanism work.
 
-For developers and vibe coders directing AI coding agents, theoretical explanations ("optimizes lifecycle execution with debounced mutations") are useless without physical verification. **The Ice-Water Test** requires the AI to give you one concrete, 10-second sensory action (e.g., throttling DevTools to offline, clicking twice rapidly, inspecting a network panel) so you can witness the physical mechanism with your own eyes.
+2. **The Boundary Condition ("Where the Machine Snaps"):** Feynman taught that an engineer does not understand a physical machine until they know the exact conditions under which it ceases to work. In the Challenger investigation, the O-ring was not flawed in general; it lost elasticity specifically below 32 deg F (0 deg C).
+   In software, while *Where the Picture Breaks* defines the limits of the everyday metaphor, **Where the Machine Snaps** identifies the physical stress threshold of the code itself. For vibe coders who build via iterative "prompt stacking", this prevents disaster: if the AI uses an in-memory dictionary or non-idempotent mutation, naming where the machine snaps alerts the developer before their next prompt triggers a catastrophic regression.
 
 ### Brevity & Anti-Verbosity Constraints
 - **Word Budget:** Target < 150 words of explanatory prose (excluding diagram block & headings; hard ceiling 220 total words). Fits completely in a standard terminal viewport without scrolling.
@@ -187,7 +190,8 @@ Whenever you complete a feature implementation, bug fix, or significant code mod
 2. The Tangible Picture: One mechanical analogy and where the picture breaks (1-2 sentences).
 3. The Ladder: 3 single-line rungs: Level 0 (zero jargon) -> Level 1 (practitioner) -> Level 2 (maintainer).
 4. The Ice-Water Test: 1 physical action in the app/terminal to watch the mechanism work (1 sentence).
-5. What Was Left Out: Deferred concerns and assumptions (1 line).
+5. Where the Machine Snaps: 1 code boundary limit / prompt-stacking failure condition (1 sentence).
+6. What Was Left Out: Deferred concerns and assumptions (1 line).
 ```
 
 ---

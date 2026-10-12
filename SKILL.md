@@ -103,12 +103,13 @@ This skill is called Simplifeyn: it must simplify, not generate an essay. Follow
 2. **No Preamble, No Recap, No Closing Pleasantries:**
    - Forbidden openers: "Sure!", "Here is what changed:", "I have implemented...", "Looking at the changes..."
    - Forbidden closers: "Hope this helps!", "Let me know if you need anything else.", "Feel free to ask."
-   - Start immediately with the first heading (Section 1). Conclude after Section 5 (What Was Left Out) and the lens exploration footer without conversational sign-offs.
+   - Start immediately with the first heading (Section 1). Conclude after Section 6 (What Was Left Out) and the lens exploration footer without conversational sign-offs.
 3. **One Sentence / Bullet Cap:** Every section has a strict length limit:
    - In One Sentence: Exactly 1 sentence.
    - The Picture & Where the Picture Breaks: 1 to 2 sentences total, accompanied by a compact 2-5 line ASCII mechanism flow diagram (`[ Input ] ---> [ Guard ] ---> [ Output ]`).
    - The Ladder: Exactly 3 bullet points (1 line per rung: L0 Plain, L1 Code, L2 Edge).
    - The Ice-Water Test: Exactly 1 physical sensory action (1 sentence).
+   - Where the Machine Snaps: Exactly 1 sentence naming the code mechanism's failure boundary under load, concurrency, or subsequent modifications.
    - What Was Left Out: Exactly 1 line.
 
 ---
@@ -151,7 +152,10 @@ Deliver the explanation across three tight single-line bullets:
 ### 4. The Ice-Water Test
 State exactly 1 sensory action in the browser, terminal, or DevTools the user can take right now to observe the mechanism in action (e.g. click sequence, curl command, or inspected log/network panel).
 
-### 5. What Was Left Out
+### 5. Where the Machine Snaps
+State exactly 1 sentence naming the code mechanism's physical failure boundary or prompt-stacking limit (e.g. concurrency race, unindexed storage bottleneck, loss of state on restart, or non-idempotent duplicate mutation).
+
+### 6. What Was Left Out
 State what was intentionally simplified or deferred in 1 line.
 
 Conclude with a single tight exploration footer suggesting 2 to 3 alternative lenses:
@@ -185,6 +189,7 @@ Before outputting the debrief, prune and verify against [failure-modes.md](./ref
 - [ ] **Complete Ladder:** Contains exactly 3 single-line rungs: Level 0 (Plain), Level 1 (Code & trade-offs), and Level 2 (Invariants & failure modes).
 - [ ] **Analogy Limits Named:** States the exact boundary where the mental model breaks.
 - [ ] **The Ice-Water Test Included:** Contains exactly 1 physical action in the browser, terminal, or DevTools to observe the mechanism in action.
+- [ ] **Where the Machine Snaps Included:** Identifies the exact code failure boundary under load, concurrency, or subsequent modifications.
 - [ ] **The "Planes Don't Land" Test:** Does the change solve the actual causal problem, or is it just defensive scaffolding?
 
 ---
@@ -200,8 +205,9 @@ Whenever you complete a feature implementation, bug fix, or significant code mod
 2. The Tangible Picture: One mechanical analogy and where the picture breaks, with an ASCII mechanism flow diagram (1-2 sentences).
 3. The Ladder: Exactly 3 single-line rungs: Level 0 (zero jargon) -> Level 1 (code & trade-offs) -> Level 2 (failure modes & scale ceilings).
 4. The Ice-Water Test: 1 physical action in the browser/terminal to observe the mechanism (1 sentence).
-5. What Was Left Out: Deferred concerns and assumptions (1 line).
-6. Lens Footer: Suggest alternative lenses.
+5. Where the Machine Snaps: 1 code boundary limit / prompt-stacking failure condition (1 sentence).
+6. What Was Left Out: Deferred concerns and assumptions (1 line).
+7. Lens Footer: Suggest alternative lenses.
 If the change is trivial (pure docs, lockfiles, formatting), output a 1-line note and append:
 `[Simplifeyn debrief skipped: cosmetic/trivial change without causal mechanism shift]`
 ```
