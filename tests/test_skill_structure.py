@@ -48,11 +48,22 @@ class TestSkillStructure(unittest.TestCase):
             "The Tangible Picture",
             "The Ladder",
             "Where the Picture Breaks",
+            "The Ice-Water Test",
             "Quality Audit Checklist",
             "Always-On Project Rule",
         ]
         for section in required_sections:
             self.assertIn(section, content, f"SKILL.md must contain section '{section}'")
+
+    def test_ice_water_test_documented(self):
+        with open(self.skill_md, "r", encoding="utf-8") as f:
+            skill_content = f.read()
+        self.assertIn("The Ice-Water Test", skill_content, "SKILL.md must document The Ice-Water Test")
+
+        with open(self.readme_md, "r", encoding="utf-8") as f:
+            readme_content = f.read()
+        self.assertIn("Ice-Water Test", readme_content, "README.md must document The Ice-Water Test")
+        self.assertIn("Challenger", readme_content, "README.md must connect Ice-Water Test to Feynman's Challenger demonstration")
 
     def test_toggleable_support(self):
         with open(self.skill_md, "r", encoding="utf-8") as f:

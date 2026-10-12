@@ -34,6 +34,7 @@ REQUIRED_SECTIONS = [
     (r"(?i)#{1,3}\s+(?:\d+\.\s+)?The (?:Tangible\s+|Physical\s+)?Picture", "The Picture"),
     (r"(?i)#{1,3}\s+(?:\d+\.\s+)?The Ladder", "The Ladder"),
     (r"(?i)(?:#{1,3}\s+(?:\d+\.\s+)?Where the Picture Breaks|\bWhere the (?:Picture|Analogy) Breaks\b|\bbreaks\s+if\b|\bbreaking\s+point\b)", "Where the Picture Breaks"),
+    (r"(?i)(?:#{1,3}\s+(?:\d+\.\s+)?(?:The\s+)?Ice[- ]Water Test|\bIce[- ]Water Test\b)", "The Ice-Water Test"),
     (r"(?i)#{1,3}\s+(?:\d+\.\s+)?(?:What Was )?Left Out", "What Was Left Out"),
 ]
 

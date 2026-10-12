@@ -41,3 +41,11 @@ In his 1974 Caltech address *Cargo Cult Science*, Feynman described South Sea is
 * **The Trap:** Starting an explanation with "Basically..." to cover up fuzziness.
 * [BAD]: *"Basically, it's just an observer pattern that handles notifications."*
 * [FEYNMAN FIX]: *"Whenever an event occurs, the publisher walks down a list of registered listener functions and calls each one in turn."*
+
+---
+
+### Failure Mode 6: The Unverifiable Explanation (Missing the Ice-Water Test)
+
+* **The Trap:** Offering pure theoretical claims without giving the developer a physical action to observe the mechanism.
+* [BAD]: *"We optimized request lifecycle scheduling by wrapping invocations in an optimistic debounce window."*
+* [FEYNMAN FIX]: *"Open browser DevTools Network tab, click 'Save' twice within 300ms, and verify only one HTTP POST is dispatched while the button disables immediately."*

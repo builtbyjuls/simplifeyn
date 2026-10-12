@@ -33,7 +33,17 @@ When AI agents implement features or fix bugs, they default to reciting files an
    * **Level 0 (Kitchen Table):** Zero jargon. Understandable by a non-technical stakeholder or curious 10-year-old.
    * **Level 1 (Practitioner):** Code mechanics, data structures, state transitions, and real-world trade-offs.
    * **Level 2 (Maintainer):** Failure modes, invariants, concurrency, scale ceilings, and rejected alternative approaches.
-4. **What Was Left Out:** Explicitly names what was simplified or deferred in 1 line.
+4. **The Ice-Water Test:** 1 physical sensory action in the browser, terminal, or DevTools to watch the mechanism work right now (1 sentence).
+5. **What Was Left Out:** Explicitly names what was simplified or deferred in 1 line.
+
+### The Feynman Philosophy: The "Ice-Water Test"
+
+During the 1986 Rogers Commission hearing investigating the Space Shuttle Challenger disaster, NASA officials and contractors presented dense statistical models and hundreds of pages of engineering jargon. Richard Feynman cut through the noise with a single physical experiment: he clamped a piece of the shuttle's rubber O-ring and dunked it into a simple glass of ice water sitting on his desk. When unclamped, the cold rubber remained stiff and failed to recover.
+
+Feynman lived by the experimental principle:
+> *"It doesn't matter how beautiful your theory is, it doesn't matter how smart you are. If it doesn't agree with experiment, it's wrong."*
+
+For developers and vibe coders directing AI coding agents, theoretical explanations ("optimizes lifecycle execution with debounced mutations") are useless without physical verification. **The Ice-Water Test** requires the AI to give you one concrete, 10-second sensory action (e.g., throttling DevTools to offline, clicking twice rapidly, inspecting a network panel) so you can witness the physical mechanism with your own eyes.
 
 ### Brevity & Anti-Verbosity Constraints
 - **Word Budget:** Target < 150 words of explanatory prose (excluding diagram block & headings; hard ceiling 220 total words). Fits completely in a standard terminal viewport without scrolling.
@@ -176,7 +186,8 @@ Whenever you complete a feature implementation, bug fix, or significant code mod
 1. In One Sentence: The physical delta without buzzwords (1 sentence).
 2. The Tangible Picture: One mechanical analogy and where the picture breaks (1-2 sentences).
 3. The Ladder: 3 single-line rungs: Level 0 (zero jargon) -> Level 1 (practitioner) -> Level 2 (maintainer).
-4. What Was Left Out: Deferred concerns and assumptions (1 line).
+4. The Ice-Water Test: 1 physical action in the app/terminal to watch the mechanism work (1 sentence).
+5. What Was Left Out: Deferred concerns and assumptions (1 line).
 ```
 
 ---

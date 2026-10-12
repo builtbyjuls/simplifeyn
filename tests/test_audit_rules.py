@@ -40,21 +40,23 @@ class TestAuditDebrief(unittest.TestCase):
 
         good_text = (
             "## In One Sentence\n"
-            "Incoming requests now check local memory before touching the database disk, keeping the 100 most recent records within reach.\n\n"
+            "Incoming requests check local memory before database disk, keeping the 100 most recent records within reach.\n\n"
             "## The Tangible Picture\n"
-            "A short-order cook keeping salt and pepper shakers directly on the prep counter instead of walking to the pantry for every order.\n\n"
+            "A cook keeping salt and pepper on the prep counter instead of walking to the pantry for every order.\n\n"
             "```text\n"
             "[ Order Slip ] ---> [ Check Prep Table ] ---> [ Dish Ready ]\n"
             " (Incoming Req)       (In-Memory Cache)         (Fast Return)\n"
             "```\n\n"
             "## Where the Picture Breaks\n"
-            "Assumes one cook; if multiple server instances run in parallel, their prep counters can become out of sync until keys expire.\n\n"
+            "Assumes one cook; parallel server instances desync until keys expire.\n\n"
             "## The Ladder\n"
-            "- **Level 0 (Kitchen Table):** We stop walking across the room for things people ask for constantly; we keep them on the front table.\n"
-            "- **Level 1 (Practitioner):** An in-memory cache keyed by item ID sits in front of SQLite, cutting read queries by 90% at the cost of 4MB RAM.\n"
-            "- **Level 2 (Maintainer):** Cache entries expire after 60 seconds; cache stampedes on startup are mitigated by mutex locking around stale fetches.\n\n"
+            "- **Level 0 (Kitchen Table):** We stop walking across the room for things asked for constantly; we keep them on the front table.\n"
+            "- **Level 1 (Practitioner):** An in-memory cache keyed by item ID sits before SQLite, cutting reads by 90% for 4MB RAM.\n"
+            "- **Level 2 (Maintainer):** Cache entries expire in 60s; startup stampedes are blocked by mutex locking around stale fetches.\n\n"
+            "## The Ice-Water Test\n"
+            "Run curl localhost:8080/items/42 twice and observe 0ms database latency on the second fetch.\n\n"
             "## What Was Left Out\n"
-            "Distributed cache synchronization across clusters was deferred until we have multiple replica nodes.\n"
+            "Distributed cache synchronization was deferred.\n"
         )
         result = audit_debrief.audit_text(good_text)
         self.assertTrue(result["passed"], f"Well-formed text should pass audit, but failed with: {result.get('errors')}")
@@ -77,6 +79,31 @@ class TestAuditDebrief(unittest.TestCase):
         self.assertFalse(result["passed"], "Omitting 'What Was Left Out' must fail audit")
         self.assertIn("What Was Left Out", result["missing_sections"])
 
+    def test_missing_ice_water_test_fails(self):
+        import audit_debrief
+
+        text_without_ice_water = (
+            "## In One Sentence\n"
+            "Incoming requests check local memory.\n\n"
+            "## The Tangible Picture\n"
+            "A cook keeping salt on the counter.\n\n"
+            "```text\n"
+            "[ Order ] ---> [ Salt ] ---> [ Served ]\n"
+            " (Req)          (Cache)        (Reply)\n"
+            "```\n\n"
+            "## The Ladder\n"
+            "- Level 0: simple.\n"
+            "- Level 1: technical.\n"
+            "- Level 2: edge case.\n\n"
+            "## Where the Picture Breaks\n"
+            "Breaks with multiple cooks.\n\n"
+            "## What Was Left Out\n"
+            "Distributed caching was deferred.\n"
+        )
+        result = audit_debrief.audit_text(text_without_ice_water)
+        self.assertFalse(result["passed"], "Omitting 'The Ice-Water Test' must fail audit")
+        self.assertIn("The Ice-Water Test", result["missing_sections"])
+
     def test_flexible_headings_pass(self):
         import audit_debrief
 
@@ -96,7 +123,9 @@ class TestAuditDebrief(unittest.TestCase):
             "- **Level 2 (Edge):** Memory cap is 100 entries.\n\n"
             "### 4. Where the Picture Breaks\n"
             "Breaks with multiple cooks sharing one prep table.\n\n"
-            "### 5. What Was Left Out\n"
+            "### 5. The Ice-Water Test\n"
+            "Query the endpoint twice to observe 0ms latency on the second fetch.\n\n"
+            "### 6. What Was Left Out\n"
             "Distributed caching was deferred.\n"
         )
         result = audit_debrief.audit_text(h3_text)
@@ -183,6 +212,8 @@ class TestAuditDebrief(unittest.TestCase):
             "- **Level 0 (Plain):** Your computer waits twice as long each time instead of pestering the busy site every second.\n"
             "- **Level 1 (Code):** `fetchWithRetry` now uses exponential backoff with jitter. Trade-off: up to 4.0s worst-case latency to eliminate stampedes.\n"
             "- **Level 2 (Edge):** Retries only transport network failures; HTTP 4xx/5xx responses bypass retries without checking res.ok.\n\n"
+            "### The Ice-Water Test\n"
+            "Throttle DevTools to Offline, trigger request, and observe a 1s delay before second knock.\n\n"
             "### What Was Left Out\n"
             "Shared circuit breaker telemetry deferred to next PR.\n"
         )
@@ -229,7 +260,9 @@ class TestAuditDebrief(unittest.TestCase):
             "- **Level 0 (Plain):** Your machine waits twice as long each time instead of pestering the busy site every second.\n"
             "- **Level 1 (Code):** `fetchWithRetry` now doubles delay with up to 500ms jitter, trading 4.0s worst-case latency to eliminate stampedes.\n"
             "- **Level 2 (Edge):** Retries only transport network failures; HTTP 4xx/5xx responses bypass retries without checking res.ok.\n\n"
-            "### 4. What Was Left Out\n"
+            "### 4. The Ice-Water Test\n"
+            "Disconnect Wi-Fi and observe the retry timer doubling in console logs.\n\n"
+            "### 5. What Was Left Out\n"
             "Circuit breaker state sharing across clients was deferred.\n"
         )
         result = audit_debrief.audit_text(flow_text)
@@ -246,13 +279,18 @@ class TestAuditDebrief(unittest.TestCase):
             "```text\n"
             "[ Turned-Away Guest ] ---> [ Roll Dice & Wait ] ---> [ Knock on Door ]\n"
             "   (Network Drop / Reset)    (2^attempt + Jitter)       (Next Retry Attempt)\n"
+            "                                      |\n"
+            "                      [ Out of Patience? ---> Walk Away ]\n"
+            "                        (Retries Exhausted)   (Throw Error)\n"
             "```\n\n"
             "Where the Picture Breaks: clients sharing the same seed can synchronize anyway.\n\n"
             "### 3. The Ladder\n"
             "- **Level 0 (Plain):** Your machine waits twice as long each time instead of pestering the busy site every second.\n"
             "- **Level 1 (Code):** `fetchWithRetry` now doubles delay with up to 500ms jitter, trading 4.0s worst-case latency to eliminate stampedes.\n"
             "- **Level 2 (Edge):** Retries only transport network failures; HTTP 4xx/5xx responses bypass retries without checking res.ok.\n\n"
-            "### 4. What Was Left Out\n"
+            "### 4. The Ice-Water Test\n"
+            "Disconnect Wi-Fi and observe the retry timer doubling in console logs.\n\n"
+            "### 5. What Was Left Out\n"
             "Circuit breaker state sharing across clients was deferred.\n\n"
             "Explore other lenses: /simplifeyn as warehouse | as workshop | as transit\n"
         )
@@ -277,7 +315,9 @@ class TestAuditDebrief(unittest.TestCase):
             "- **Level 0 (Plain):** A physical gate stops the machine from writing on the board until the reader finishes reading.\n"
             "- **Level 1 (Code):** Inserted `atomic_thread_fence(memory_order_release)` to prevent out-of-order store reordering.\n"
             "- **Level 2 (Edge):** Prevents stale reads across CPU cores on weakly-ordered architectures like ARM.\n\n"
-            "### 4. What Was Left Out\n"
+            "### 4. The Ice-Water Test\n"
+            "Run multithreaded test binary and verify zero out-of-order store assertions in terminal.\n\n"
+            "### 5. What Was Left Out\n"
             "Cache coherency bus snooping hardware details were omitted.\n"
         )
         result = audit_debrief.audit_text(text_with_fallback)
@@ -386,7 +426,9 @@ class TestAuditDebrief(unittest.TestCase):
             "- **Level 0 (Plain):** Your machine waits twice as long each time instead of pestering the busy site every second.\n"
             "- **Level 1 (Code):** `fetchWithRetry` now doubles delay with up to 500ms jitter, trading 7.5s worst-case latency to eliminate stampedes.\n"
             "- **Level 2 (Maintainer):** Retries all exceptions indiscriminately including 4xx errors; retries past 6 exceed 1 minute without deadline budget.\n\n"
-            "### 4. What Was Left Out\n"
+            "### 4. The Ice-Water Test\n"
+            "Disconnect Wi-Fi and observe retry delay timer double in terminal logs.\n\n"
+            "### 5. What Was Left Out\n"
             "Circuit breaker state sharing across clients was deferred.\n\n"
             "Explore other lenses: /simplifeyn as transit | as workshop\n"
         )
