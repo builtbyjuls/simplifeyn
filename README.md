@@ -2,6 +2,7 @@
 
 [![Agent Skills Standard](https://img.shields.io/badge/Agent%20Skills-Standard-blue.svg)](https://agentskills.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+[![CI](https://github.com/builtbyjuls/simplifeyn/actions/workflows/ci.yml/badge.svg)](https://github.com/builtbyjuls/simplifeyn/actions/workflows/ci.yml)
 [![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen.svg)](./tests)
 
 > **An Agent Skill that explains code changes, PR diffs, and feature implementations the way Richard Feynman explained physics: physical mechanism first, one honest everyday analogy with its exact limits, and a ladder from kitchen-table simplicity to maintainer edge cases.**
@@ -45,12 +46,27 @@ When AI agents implement features or fix bugs, they default to reciting files an
 
 ## Installation
 
-### 1. One-Line Install Script
+### Quick Install (One-Liner)
+
+Install directly to your coding assistant with zero cloning:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/builtbyjuls/simplifeyn/main/install.sh | bash
+```
+
+Or target a specific client via pipe:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/builtbyjuls/simplifeyn/main/install.sh | bash -s -- --claude
+curl -fsSL https://raw.githubusercontent.com/builtbyjuls/simplifeyn/main/install.sh | bash -s -- --antigravity
+```
+
+### From Source
 
 Clone and run the installer:
 
 ```bash
-git clone https://github.com/your-username/simplifeyn.git /tmp/simplifeyn
+git clone https://github.com/builtbyjuls/simplifeyn.git /tmp/simplifeyn
 cd /tmp/simplifeyn
 
 # Auto-detect your installed tools and install

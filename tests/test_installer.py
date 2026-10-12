@@ -73,5 +73,35 @@ class TestInstaller(unittest.TestCase):
         self.assertTrue(os.path.isfile(diff_script))
         self.assertTrue(os.access(diff_script, os.X_OK), "Installed scripts/get-diff.sh must be executable")
 
+    def test_installer_pipe_execution(self):
+        target_skills_dir = os.path.join(self.temp_dir, "skills")
+        with open(self.installer, "r", encoding="utf-8") as f:
+            script_text = f.read()
+        proc = subprocess.run(
+            ["bash", "-s", "--", "--target", target_skills_dir],
+            input=script_text,
+            cwd=BASE_DIR,
+            capture_output=True,
+            text=True
+        )
+        self.assertEqual(proc.returncode, 0, f"Piped installer failed: {proc.stderr}")
+        installed_skill = os.path.join(target_skills_dir, "simplifeyn", "SKILL.md")
+        self.assertTrue(os.path.isfile(installed_skill))
+
+    def test_installer_pipe_from_external_directory(self):
+        target_skills_dir = os.path.join(self.temp_dir, "skills")
+        with open(self.installer, "r", encoding="utf-8") as f:
+            script_text = f.read()
+        proc = subprocess.run(
+            ["bash", "-s", "--", "--target", target_skills_dir],
+            input=script_text,
+            cwd=self.temp_dir,
+            capture_output=True,
+            text=True
+        )
+        self.assertEqual(proc.returncode, 0, f"Piped installer failed from external dir: {proc.stderr}")
+        installed_skill = os.path.join(target_skills_dir, "simplifeyn", "SKILL.md")
+        self.assertTrue(os.path.isfile(installed_skill))
+
 if __name__ == "__main__":
     unittest.main()

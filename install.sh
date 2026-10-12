@@ -1,8 +1,34 @@
 #!/usr/bin/env bash
 # Universal installer for simplifeyn across Claude Code, Antigravity, OpenAI Codex, and Cursor
 set -euo pipefail
+SCRIPT_DIR=""
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CLEANUP_TMP=0
+TMP_CLONE_DIR=""
+if [ -z "$SCRIPT_DIR" ] || [ ! -f "$SCRIPT_DIR/SKILL.md" ]; then
+  TMP_CLONE_DIR="$(mktemp -d)"
+  CLEANUP_TMP=1
+  cleanup() {
+    if [ "$CLEANUP_TMP" -eq 1 ] && [ -n "$TMP_CLONE_DIR" ] && [ -d "$TMP_CLONE_DIR" ]; then
+      rm -rf "$TMP_CLONE_DIR"
+    fi
+  }
+  trap cleanup EXIT INT TERM
+  if command -v git >/dev/null 2>&1; then
+    git clone --depth 1 https://github.com/builtbyjuls/simplifeyn.git "$TMP_CLONE_DIR" >/dev/null 2>&1
+    SCRIPT_DIR="$TMP_CLONE_DIR"
+  elif command -v curl >/dev/null 2>&1 && command -v tar >/dev/null 2>&1; then
+    curl -fsSL https://github.com/builtbyjuls/simplifeyn/archive/refs/heads/main.tar.gz | tar -xz -C "$TMP_CLONE_DIR" --strip-components=1
+    SCRIPT_DIR="$TMP_CLONE_DIR"
+  else
+    echo "Error: git or (curl + tar) is required to download simplifeyn." >&2
+    exit 1
+  fi
+fi
+
 SKILL_NAME="simplifeyn"
 
 usage() {

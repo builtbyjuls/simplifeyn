@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run unit test suite
+        run: |
+          python3 -m unittest discover -v tests
+
+      - name: Test installer
+        run: |
+          ./install.sh --help
+          ./install.sh --target /tmp/test_ci_skills
+          ./install.sh --check --target /tmp/test_ci_skills
