@@ -34,9 +34,12 @@ This skill supports both one-shot commands and persistent session toggling:
    - Confirm deactivation in one line: *"Simplifeyn mode disabled: returning to default output style."*
    - Stop appending debriefs automatically.
 3. **Check Status (`/simplifeyn status`):**
-   - Report whether persistent mode is currently ACTIVE or INACTIVE.
+   - Report whether persistent mode is currently ACTIVE or INACTIVE, and list active lens if set.
 4. **One-Shot Execution (`/simplifeyn` or `/simplifeyn once`):**
    - Debrief only the latest diff or specified code change without changing persistent session state.
+5. **Themed Lens Selection (`/simplifeyn as <theme>` or `/simplifeyn --as=<theme>`):**
+   - Direct the debrief to draw analogies from a specific physical domain (`kitchen`, `warehouse`, `workshop`, `transit`, `office`, `gaming`).
+   - Also supported with persistence: `/simplifeyn on as <theme>` (or `/simplifeyn on --as=<theme>`).
 
 ## Persistence Rules
 
@@ -115,7 +118,22 @@ Deliver the explanation across three tight single-line bullets:
 ### 4. What Was Left Out
 State what was intentionally simplified or deferred in 1 line.
 
+Conclude with a single tight exploration footer suggesting 2 to 3 alternative lenses:
+`Explore other lenses: /simplifeyn as <theme1> | as <theme2> | as <theme3>`
+
 See [worked-examples.md](./assets/worked-examples.md) for full before-and-after exemplar debriefs.
+
+---
+
+## Themed Analogy Lenses & Fallback Rules
+
+Users can select a preferred physical domain using `--as=<theme>` or `/simplifeyn as <theme>` (`kitchen`, `warehouse`, `workshop`, `transit`, `office`, `gaming`). See [analogies.md](./references/analogies.md) for catalog definitions.
+
+### The Analogy Fit Check & Fallback Rule
+1. **Strong Fit:** If the requested lens naturally maps to the causal mechanics, use it.
+2. **Poor Fit / Distortion:** If the requested lens would obscure the code or require misleading mental acrobatics, **do not fake it**.
+3. **The Fallback Note:** State the reason honestly in 1 line and fall back to the accurate domain:
+   *`Note on lens: A '<theme>' analogy distorts <concept>; falling back to '<accurate-theme>' (<objects>) for honest mechanics.`*
 
 ---
 

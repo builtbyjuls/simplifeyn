@@ -64,3 +64,5 @@ Where the picture breaks: clients that share the same pseudo-random seed can syn
 
 ### 4. What Was Left Out
 Circuit breaker state sharing across clients was deferred.
+
+Explore other lenses: /simplifeyn as transit | as workshop | as gaming

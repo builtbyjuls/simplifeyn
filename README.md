@@ -92,7 +92,23 @@ Turn Feynman debriefing on or off dynamically during your session:
 /simplifeyn off
 ```
 
-### Mode 2: One-Shot Command
+### Mode 2: Themed Lenses (`as <theme>` or `--as=<theme>`)
+
+Direct the debrief toward a specific physical domain (`kitchen`, `warehouse`, `workshop`, `transit`, `office`, `gaming`):
+
+```bash
+# One-shot with specific lens:
+/simplifeyn as kitchen
+/simplifeyn --as=warehouse
+/simplifeyn HEAD~1 as transit
+
+# Persistent mode locked to a lens:
+/simplifeyn on as workshop
+```
+
+If a requested lens fundamentally distorts the code mechanism, Simplifeyn enforces Feynman honesty: it outputs a 1-line disclaimer and falls back to the accurate domain.
+
+### Mode 3: One-Shot Command
 
 Run once for the latest change or a specific commit without enabling session persistence:
 
@@ -105,7 +121,7 @@ Run once for the latest change or a specific commit without enabling session per
 Or ask the agent in plain language:
 > *"Explain what you just implemented using the Feynman technique."*
 
-### Mode 3: Always-On Project Rule
+### Mode 4: Always-On Project Rule
 
 If you want your agent to conclude **every** feature implementation or bug fix with a Feynman Debrief automatically across the whole repo, add this block to your project's `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`:
 

@@ -78,6 +78,22 @@ class TestSkillStructure(unittest.TestCase):
             "SKILL.md must guide the creation of an ASCII mechanism flow/diagram"
         )
 
+    def test_analogy_lenses_and_fallback_support(self):
+        with open(self.skill_md, "r", encoding="utf-8") as f:
+            skill_content = f.read()
+
+        self.assertIn("--as=", skill_content, "SKILL.md must document lens parameter --as=<theme>")
+        self.assertIn("fallback", skill_content.lower(), "SKILL.md must document fallback rules for ill-fitting lenses")
+        self.assertIn("explore other lenses", skill_content.lower(), "SKILL.md must document exploration footer")
+
+        analogies_path = os.path.join(BASE_DIR, "references", "analogies.md")
+        with open(analogies_path, "r", encoding="utf-8") as f:
+            analogies_content = f.read().lower()
+
+        required_domains = ["kitchen", "warehouse", "workshop", "transit", "office", "gaming"]
+        for domain in required_domains:
+            self.assertIn(domain, analogies_content, f"analogies.md must document the '{domain}' domain")
+
     def test_references_exist(self):
         ref_dir = os.path.join(BASE_DIR, "references")
         self.assertTrue(os.path.isdir(ref_dir), "references/ directory must exist")

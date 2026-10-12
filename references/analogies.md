@@ -1,44 +1,134 @@
-# Catalog of Physical Mental Models & Breaking Points
+# Catalog of Physical Mental Models & Themed Lenses
 
 A core requirement of the Feynman technique is providing **one honest physical analogy** and explicitly stating **where that analogy breaks**.
 
-Here is a reference catalog of battle-tested physical analogies for common software patterns:
+Different human minds connect with different physical environments. Simplifeyn organizes physical mental models into six themed lenses:
+1. **Kitchen & Dining** (`kitchen`)
+2. **Warehouse & Logistics** (`warehouse`)
+3. **Workshop & Hydraulics** (`workshop`)
+4. **Transit & Highways** (`transit`)
+5. **Office & Library** (`office`)
+6. **Gaming & Adventure** (`gaming`)
 
 ---
 
-### 1. LRU Cache / In-Memory Buffers
-* **The Physical Picture:** A small desk with room for exactly 5 file folders. When a new file is requested, you grab it from the metal filing cabinet in the basement and set it on the desk. When the 6th folder arrives, you take whichever folder has gone untouched the longest and put it back in the basement.
-* **Where the Picture Breaks:**
-  * In software, multiple people (threads) can reach for the desk simultaneously, causing race conditions unless there is a physical lock.
-  * Unlike paper folders, computer files in memory can be altered in the background by external processes, leading to stale reads.
+## 1. Kitchen & Dining (`kitchen`)
+
+* **Sensory Objects:** Short-order cooks, prep tables, pantries, spice racks, order ticket wheels, conveyor sushi belts, dishwashing sinks.
+* **Natural Fit:** In-memory caching, request-response lifecycles, batching, fan-out, worker pools.
+* **Exemplar Mechanism (LRU Cache):**
+  * *Physical Picture:* A short-order cook keeps salt, pepper, and butter directly on the prep counter. When a recipe needs truffle oil from the basement pantry, the cook walks downstairs once and places the bottle on the counter. When the counter runs out of room, the bottle that has gone untouched the longest gets carried back down to the pantry.
+  * *Mechanism Flow:*
+    ```text
+    [ Order Ticket ] ---> [ Prep Counter Check ] ---> [ Basement Pantry Walk ]
+     (API Request)           (In-Memory Cache)             (Database Disk Read)
+                                    |
+                    [ Counter Full? ---> Evict Oldest ]
+    ```
+  * *Where the Picture Breaks:* In a physical kitchen, one cook reaching for salt does not cause a race condition or memory corruption with another cook unless they physically collide; in software, concurrent threads require explicit mutexes or lock striping.
+* *Poor Fit (Fallback Trigger):* Asymmetric cryptography, hardware memory fences, tree balancing algorithms.
 
 ---
 
-### 2. Rate Limiting (Token Bucket)
-* **The Physical Picture:** A water bucket with a small hole in the bottom that drips steadily at 10 drops per second. When a client makes a request, they pour a cup of water into the bucket. If the bucket is full to the brim, the water spills over the edge and the request is rejected.
-* **Where the Picture Breaks:**
-  * Water drops are continuous; computer clocks and token resets occur in discrete CPU ticks.
-  * If multiple server nodes manage the bucket, keeping a shared water level across machines requires network synchronization.
+## 2. Warehouse & Logistics (`warehouse`)
+
+* **Sensory Objects:** Freight loading docks, pallets, forklifts, shipping manifests, conveyor sorting chutes, storage bins, barcode scanners.
+* **Natural Fit:** Ingestion pipelines, ETL, database partition pruning, message queues with backpressure, transaction isolation.
+* **Exemplar Mechanism (Asynchronous Queue with Backpressure):**
+  * *Physical Picture:* A loading dock unloading shipping containers onto a motorized conveyor belt. At the end of the belt, a worker inspects and stacks boxes onto pallets. If incoming shipments arrive faster than the worker can stack, boxes pile up. Once the belt reaches maximum capacity, a mechanical gate shuts off the dock roller doors until the worker clears the backlog.
+  * *Mechanism Flow:*
+    ```text
+    [ Delivery Truck ] ---> [ Motorized Conveyor ] ---> [ Pallet Stacker ]
+      (Producer Stream)        (Bounded Queue)          (Consumer Worker)
+                                      |
+                     [ Belt Full? ---> Close Dock Door ]
+                                    (Backpressure)
+    ```
+  * *Where the Picture Breaks:* A physical conveyor belt drops boxes onto the floor if jammed, leaving visible physical evidence; an unbounded in-memory software queue crashes silently with an Out-Of-Memory (OOM) error, destroying uncommitted in-flight state.
+* *Poor Fit (Fallback Trigger):* Mathematical transforms, string hashing, bitwise manipulation.
 
 ---
 
-### 3. Asynchronous Message Queue with Backpressure
-* **The Physical Picture:** A conveyor belt in a packaging plant. Workers on one end place boxes on the belt; a single packer on the other end tapes them up. If the packer falls behind, boxes pile up on the belt. Once the belt is full, a physical gate stops the loaders from adding more boxes until the packer catches up.
-* **Where the Picture Breaks:**
-  * Physical conveyor belts have finite physical length and cannot crash due to Out Of Memory (OOM).
-  * If a box falls off a real belt, you can see it on the floor; in a software queue without persistence, an unhandled crash destroys unread messages without leaving a physical trace.
+## 3. Workshop & Hydraulics (`workshop`)
+
+* **Sensory Objects:** Steel gears, pressure relief valves, water reservoirs, flywheels, springs, latches, pipe manifolds, copper coils.
+* **Natural Fit:** Concurrency locks, thread synchronization, memory barriers, rate limiters, circuit breakers.
+* **Exemplar Mechanism (Token Bucket Rate Limiter):**
+  * *Physical Picture:* A water reservoir fed by a steady pipe flowing at 10 gallons per minute. Incoming machines tap a valve to draw 1 gallon per task. If machines draw water faster than the pipe refills and the reservoir runs dry, a spring-loaded pressure switch snaps shut, rejecting further taps until water level rises.
+  * *Mechanism Flow:*
+    ```text
+    [ Supply Inflow ] ---> [ Water Reservoir ] ---> [ Machine Tap Valve ]
+      (Token Refill)          (Token Bucket)           (API Client Task)
+                                    |
+                    [ Tank Dry? ---> Snap Valve Shut ]
+                                  (HTTP 429 Reject)
+    ```
+  * *Where the Picture Breaks:* Water flow is fluid and analog, whereas CPU rate limiters evaluate discrete clock cycles and timestamp counters.
+* *Poor Fit (Fallback Trigger):* User interfaces, declarative stylesheets, relational joins.
 
 ---
 
-### 4. Exponential Backoff with Jitter
-* **The Physical Picture:** A crowded doctor's office with a locked consultation door. Instead of rattling the doorknob every 5 seconds, an impatient patient waits 5 seconds, then 10, then 20. To stop 50 waiting patients from simultaneously rattling the knob at the exact 20-second mark, each patient rolls a pair of dice and adds a few random seconds to their own timer.
-* **Where the Picture Breaks:**
-  * Patients in a real clinic eventually leave or complain to staff; software clients can loop until connection timeouts exhaust file descriptors.
-  * If the service is dead (not just slow), backing off delays the inevitable failure instead of failing fast.
+## 4. Transit & Highways (`transit`)
+
+* **Sensory Objects:** Toll booths, highway on-ramps, traffic roundabouts, railway track switches, subway turnstiles, express lanes.
+* **Natural Fit:** Network routing, load balancers, DNS failover, exponential backoff with jitter, retry storms.
+* **Exemplar Mechanism (Exponential Backoff with Jitter):**
+  * *Physical Picture:* A single-lane mountain tunnel blocked by a rockslide. A highway patrol officer turns approaching cars around and instructs each driver to wait 1 minute before trying again, then 2 minutes, then 4. To stop 100 waiting drivers from hitting the tunnel entrance at the exact same second, the officer tells each driver to roll a die and add that many seconds to their wait.
+  * *Mechanism Flow:*
+    ```text
+    [ Approaching Car ] ---> [ Highway Patrol Turnaround ] ---> [ Timed Re-entry ]
+      (Failed Client)            (5xx Status Code)              (Next Retry Attempt)
+                                         |
+                     [ Roll Die? ---> Stagger Entry Times ]
+                                  (Randomized Jitter)
+    ```
+  * *Where the Picture Breaks:* Drivers run out of patience, exit the highway, or turn on navigation apps; software clients loop infinitely until deadline budgets or socket timeouts kill them.
+* *Poor Fit (Fallback Trigger):* In-memory pointer arithmetic, state machine serialization.
 
 ---
 
-### 5. Circuit Breaker
-* **The Physical Picture:** An electrical circuit breaker in your home panel. If a toaster shorts out, the spring flips the breaker switch OPEN, instantly cutting current to prevent an electrical fire. After a few minutes, someone cautiously flips the switch to HALF-OPEN to test if the toaster still sparks; if it runs cleanly, the switch is closed back to normal.
-* **Where the Picture Breaks:**
-  * Physical circuit breakers respond to thermal overload or electromagnetic current; software circuit breakers rely on statistical error rates, sliding time windows, and threshold calculations.
+## 5. Office & Library (`office`)
+
+* **Sensory Objects:** Mailroom sorting cubbies, pneumatic tubes, card catalogs, rubber stamps, carbon-copy manifests, shredders, filing cabinets.
+* **Natural Fit:** Database indexes, B-trees, WAL (Write-Ahead Logs), schema migrations, read-write replicas.
+* **Exemplar Mechanism (Write-Ahead Logging / WAL):**
+  * *Physical Picture:* A bank teller with a bound ledger and a stack of customer deposit slips. Before the teller opens the heavy iron ledger and updates the account balance, the teller stamps the deposit slip, writes the transaction into a rapid spiral notepad on the desk, and signs it. If the building loses power, the teller can reconstruct the exact account balances simply by reading through the spiral notepad.
+  * *Mechanism Flow:*
+    ```text
+    [ Deposit Slip ] ---> [ Quick Spiral Notepad ] ---> [ Heavy Iron Ledger ]
+     (Client Write)           (Write-Ahead Log)            (Postgres Tables)
+                                     |
+                    [ Power Out? ---> Replay Notepad ]
+                                  (Crash Recovery)
+    ```
+  * *Where the Picture Breaks:* A physical notepad requires manual handwriting and physical paper storage; software WAL flushes append-only byte buffers to SSD storage blocks via atomic fsync calls.
+* *Poor Fit (Fallback Trigger):* Real-time audio rendering, SIMD vectorization.
+
+---
+
+## 6. Gaming & Adventure (`gaming`)
+
+* **Sensory Objects:** Inventory slot bags, potion cooldown timers, spell casting queues, party buff bars, respawn checkpoints, dungeon turn orders.
+* **Natural Fit:** State machines, retry budgets, circuit breakers, idempotency tokens, event-driven transitions.
+* **Exemplar Mechanism (Circuit Breaker):**
+  * *Physical Picture:* A spellcaster whose powerful spell has a chance to backfire. If the spell fails 3 times in a row, a magical shield locks the spell slot into a 30-second cooldown (OPEN state). When the cooldown expires, the shield allows one cautious test cast (HALF-OPEN). If it succeeds, full casting resumes (CLOSED); if it fails, the 30-second lock snaps back on immediately.
+  * *Mechanism Flow:*
+    ```text
+    [ Spell Cast Attempt ] ---> [ Success / Backfire ] ---> [ Cooldown Shield ]
+       (Upstream API Call)            (200 vs 500)            (Circuit Breaker)
+                                             |
+                         [ 3 Backfires? ---> Lock Spell Slot ]
+                                              (Trip Circuit)
+    ```
+  * *Where the Picture Breaks:* A video game spell cooldown is deterministic and controlled by a single client tick loop; a distributed circuit breaker evaluates sliding statistical windows across cluster instances.
+* *Poor Fit (Fallback Trigger):* Kernel memory page tables, binary protocol framing.
+
+---
+
+## The Analogy Fit Check & Fallback Rule
+
+When the user specifies a lens (e.g. `/simplifeyn as kitchen`):
+1. **Strong Fit:** If the requested domain naturally models the causal mechanics, use it.
+2. **Poor Fit / Distortion:** If forcing the requested lens would require confusing mental acrobatics or distort what the software actually does (e.g., explaining CPU memory ordering using pizza toppings), **do not fake it**.
+3. **The Fallback Note:** State the reason honestly in 1 line and fall back to the accurate domain:
+   *`Note on lens: A 'kitchen' analogy distorts hardware memory fences; falling back to 'workshop' (spring latches & valves) for honest mechanics.`*

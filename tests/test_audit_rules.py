@@ -205,5 +205,53 @@ class TestAuditDebrief(unittest.TestCase):
         result = audit_debrief.audit_text(flow_text)
         self.assertTrue(result["passed"], f"Debrief with ASCII flowchart must pass audit: {result.get('errors')}")
 
+    def test_debrief_with_lens_footer_passes(self):
+        import audit_debrief
+
+        text_with_footer = (
+            "### 1. In One Sentence\n"
+            "When a server fails, we double the wait before each retry and add a random wobble so clients do not stampede at once.\n\n"
+            "### 2. The Tangible Picture\n"
+            "A host telling turned-away guests to wait with a dice roll so they do not all knock at once.\n\n"
+            "```text\n"
+            "[ Turned-Away Guest ] ---> [ Roll Dice & Wait ] ---> [ Knock on Door ]\n"
+            "    (Server 5xx Error)       (2^attempt + Jitter)       (Next Retry Attempt)\n"
+            "```\n\n"
+            "Where the Picture Breaks: clients sharing the same seed can synchronize anyway.\n\n"
+            "### 3. The Ladder\n"
+            "- **Level 0 (Plain):** Your machine waits twice as long each time instead of pestering the busy site every second.\n"
+            "- **Level 1 (Code):** `fetchWithRetry` now doubles delay with up to 500ms jitter, trading 7.5s worst-case latency to eliminate stampedes.\n"
+            "- **Level 2 (Edge):** Retries all exceptions indiscriminately including 4xx errors; retries past 6 exceed 1 minute without deadline budget.\n\n"
+            "### 4. What Was Left Out\n"
+            "Circuit breaker state sharing across clients was deferred.\n\n"
+            "Explore other lenses: /simplifeyn as warehouse | as workshop | as transit\n"
+        )
+        result = audit_debrief.audit_text(text_with_footer)
+        self.assertTrue(result["passed"], f"Debrief with lens exploration footer must pass: {result.get('errors')}")
+
+    def test_debrief_with_fallback_note_passes(self):
+        import audit_debrief
+
+        text_with_fallback = (
+            "Note on lens: A 'kitchen' analogy distorts hardware memory fences; falling back to 'workshop' (latches & spring-loaded valves) for honest mechanics.\n\n"
+            "### 1. In One Sentence\n"
+            "CPU instructions now wait for an explicit latch to release before touching shared memory addresses.\n\n"
+            "### 2. The Tangible Picture\n"
+            "A spring latch holding back a mechanical lever until the previous gear rotation clicks into place.\n\n"
+            "```text\n"
+            "[ Memory Write ] ---> [ Spring Latch Guard ] ---> [ Lever Release ]\n"
+            "   (Store Buffer)           (Memory Barrier)          (RAM Commit)\n"
+            "```\n\n"
+            "Where the Picture Breaks: physical springs have mechanical delay, while CPU fences execute in clock cycles.\n\n"
+            "### 3. The Ladder\n"
+            "- **Level 0 (Plain):** A physical gate stops the machine from writing on the board until the reader finishes reading.\n"
+            "- **Level 1 (Code):** Inserted `atomic_thread_fence(memory_order_release)` to prevent out-of-order store reordering.\n"
+            "- **Level 2 (Edge):** Prevents stale reads across CPU cores on weakly-ordered architectures like ARM.\n\n"
+            "### 4. What Was Left Out\n"
+            "Cache coherency bus snooping hardware details were omitted.\n"
+        )
+        result = audit_debrief.audit_text(text_with_fallback)
+        self.assertTrue(result["passed"], f"Debrief with fallback lens note must pass: {result.get('errors')}")
+
 if __name__ == "__main__":
     unittest.main()
