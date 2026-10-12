@@ -40,14 +40,44 @@ This skill supports both one-shot commands and persistent session toggling:
 5. **Themed Lens Selection (`/simplifeyn as <theme>` or `/simplifeyn --as=<theme>`):**
    - Direct the debrief to draw analogies from a specific physical domain (`kitchen`, `warehouse`, `workshop`, `transit`, `office`, `gaming`).
    - Also supported with persistence: `/simplifeyn on as <theme>` (or `/simplifeyn on --as=<theme>`).
+6. **One-Turn Skip (`/simplifeyn skip` or `--no-debrief`):**
+   - Suppress the debrief for the current turn without disabling persistent session mode.
 
 ## Persistence Rules
 
 When Toggle Mode is ON:
+- Assess diff complexity first using the **Complexity Gating** rules below.
+- If the change is trivial or cosmetic, output a standard 1-sentence note and append `[Simplifeyn debrief skipped: cosmetic/trivial change without causal mechanism shift]`.
+- If the change introduces non-trivial logic, state changes, or new behavior, append the full Feynman Debrief.
 - These rules apply to every code modification turn for the rest of the session.
 - They do not expire after a few turns and do not lapse when changing topics.
 - Deactivate only upon receiving `/simplifeyn off` or "stop simplifeyn mode".
 - **Note on Session State:** Agent Skills are instructions provided to the AI model, not persistent background daemons. Session toggling (`/simplifeyn on`) is an in-context behavioral instruction (best-effort across long contexts). For guaranteed repository-wide debriefs across every new session, use **Mode 4: Always-On Project Rule** in `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`.
+
+---
+
+## Complexity Gating: When to Debrief vs. When to Skip
+
+Not every code change warrants a full Feynman debrief. Over-explaining a 1-line typo fix, dependency bump, or formatting tweak creates noise. The agent must evaluate diff complexity before deciding whether to debrief:
+
+### Skip Criteria (Do NOT Debrief)
+Skip the Feynman debrief when the change matches any of these conditions:
+1. **Documentation and Metadata Only:** Changes touch only `.md`, `.txt`, `.json`, `.lock`, `.yaml`, `.yml`, `.gitignore`, `LICENSE`, or configuration files with zero runtime logic changes.
+2. **Cosmetic and Styling:** Pure formatting, whitespace, comment clarifications, lint fixes, or variable renames without behavioral shifts.
+3. **Trivial One-Liners:** Modifying a static constant, updating an environment variable string, or adjusting an off-by-one loop index without architectural consequence.
+4. **Conventional Commit Signals:** Commits prefixed with `docs:`, `chore:`, `style:`, `ci:`, `build:`, or trivial `fix(typo):`.
+
+**Behavior When Skipped:** Output a standard concise summary sentence followed by:
+`[Simplifeyn debrief skipped: cosmetic/trivial change without causal mechanism shift]`
+
+### Debrief Triggers (Must Debrief)
+Always produce a full Feynman debrief when:
+1. **Causal Mechanism Shift:** Data moves, transforms, or persists through different stages, states, or threads than before.
+2. **Concurrency, Performance, or Scale:** Caching, locks, debouncing, exponential backoff, rate limiting, async loops, or race condition fixes.
+3. **New Features and Contract Changes:** New public APIs, schema migrations, state machines, or business logic.
+4. **Conventional Commit Signals:** Commits prefixed with `feat:`, `perf:`, non-trivial `fix:`, or structural `refactor:`.
+5. **Explicit Invocation:** The user explicitly typed `/simplifeyn`, or asked *"explain what you did"*.
+
 
 ---
 

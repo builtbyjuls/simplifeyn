@@ -66,3 +66,36 @@ Where the picture breaks: clients that share the same pseudo-random seed can syn
 Circuit breaker state sharing across clients was deferred.
 
 Explore other lenses: /simplifeyn as transit | as workshop | as gaming
+
+---
+
+## Example Scenario: Trivial Documentation / Typo Fix (Gated Skip)
+
+### The Code Change (Git Diff)
+
+```diff
+--- a/README.md
++++ b/README.md
+@@ -10,1 +10,1 @@
+-All rights reverved.
++All rights reserved.
+```
+
+---
+
+### [BAD] The Typical Agent Output (Over-explaining Trivial Edits)
+
+> *"I have conducted a thorough review of `README.md` and successfully resolved a critical spelling defect on line 10. Specifically, I substituted the invalid word token 'reverved' with the correct spelling 'reserved'. This optimizes documentation legibility and streamlines user onboarding across all platforms."*
+
+**Why this fails:**
+- Over-explains a single-character typo fix with pompous buzzwords ("optimizes legibility", "streamlines onboarding").
+- Generates a bloated explanation for a change that has zero algorithmic, state, or mechanical impact.
+
+---
+
+### [GOOD] The Simplifeyn Output (Gated Skip)
+
+> Fixed typo in README: replaced "reverved" with "reserved".
+>
+> `[Simplifeyn debrief skipped: cosmetic/trivial change without causal mechanism shift]`
+

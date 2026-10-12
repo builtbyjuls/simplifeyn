@@ -197,9 +197,17 @@ class TestAuditDebrief(unittest.TestCase):
 
         good_marker = "### [GOOD] The Simplifeyn Debrief Output"
         self.assertIn(good_marker, content)
-        good_section = content.split(good_marker, 1)[1].strip()
+        good_section = content.split(good_marker, 1)[1].split("\n---\n")[0].strip()
         result = audit_debrief.audit_text(good_section)
         self.assertTrue(result["passed"], f"Official worked-example [GOOD] debrief must pass audit: {result.get('errors')}")
+
+    def test_worked_example_contains_skipped_scenario(self):
+        worked_examples_path = os.path.join(BASE_DIR, "assets", "worked-examples.md")
+        with open(worked_examples_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("Gated Skip", content, "worked-examples.md must illustrate a gated skip example")
+        self.assertIn("[Simplifeyn debrief skipped", content, "worked-examples.md must illustrate the skip marker")
 
     def test_debrief_with_ascii_flowchart_passes(self):
         import audit_debrief
@@ -385,6 +393,133 @@ class TestAuditDebrief(unittest.TestCase):
         result = audit_debrief.audit_text(good_text)
         self.assertTrue(result["passed"], f"Well-formed debrief should pass: {result.get('errors')}")
         self.assertLessEqual(result.get("prose_word_count", 999), 150)
+
+    def test_diff_complexity_docs_only_skipped(self):
+        import audit_debrief
+        diff = (
+            "diff --git a/docs/README.md b/docs/README.md\n"
+            "--- a/docs/README.md\n"
+            "+++ b/docs/README.md\n"
+            "@@ -1,2 +1,2 @@\n"
+            "-old doc\n"
+            "+new doc\n"
+        )
+        res = audit_debrief.check_diff_complexity(diff)
+        self.assertFalse(res["should_debrief"], "Docs-only diff must not trigger debrief")
+        self.assertIn("skip", res["action"].lower())
+
+    def test_diff_complexity_metadata_chore_skipped(self):
+        import audit_debrief
+        diff = (
+            "diff --git a/package.json b/package.json\n"
+            "--- a/package.json\n"
+            "+++ b/package.json\n"
+            "@@ -5,1 +5,1 @@\n"
+            "-  \"version\": \"1.0.0\"\n"
+            "+  \"version\": \"1.0.1\"\n"
+        )
+        res = audit_debrief.check_diff_complexity(diff)
+        self.assertFalse(res["should_debrief"], "Metadata version bump must not trigger debrief")
+
+    def test_diff_complexity_code_logic_change_triggered(self):
+        import audit_debrief
+        diff = (
+            "diff --git a/src/cache.py b/src/cache.py\n"
+            "--- a/src/cache.py\n"
+            "+++ b/src/cache.py\n"
+            "@@ -10,6 +10,14 @@\n"
+            "+    if key in self._lru:\n"
+            "+        self._lru.move_to_end(key)\n"
+            "+        return self._lru[key]\n"
+            "+    val = self._fetch_from_disk(key)\n"
+            "+    self._lru[key] = val\n"
+        )
+        res = audit_debrief.check_diff_complexity(diff)
+        self.assertTrue(res["should_debrief"], "Code logic change must trigger debrief")
+        self.assertEqual(res["action"], "debrief")
+
+    def test_diff_complexity_commit_msg_heuristic(self):
+        import audit_debrief
+        diff = (
+            "diff --git a/src/worker.py b/src/worker.py\n"
+            "--- a/src/worker.py\n"
+            "+++ b/src/worker.py\n"
+            "@@ -1 +1 @@\n"
+            "-# note\n"
+            "+# updated note\n"
+        )
+        res_docs = audit_debrief.check_diff_complexity(diff, commit_msg="docs: clarify comments in worker")
+        self.assertFalse(res_docs["should_debrief"])
+
+        res_feat = audit_debrief.check_diff_complexity(diff, commit_msg="feat(worker): introduce background queue")
+        self.assertTrue(res_feat["should_debrief"])
+
+    def test_diff_complexity_cli_flags(self):
+        import subprocess
+        audit_script = os.path.join(BASE_DIR, "scripts", "audit_debrief.py")
+        trivial_diff = (
+            "diff --git a/README.md b/README.md\n"
+            "--- a/README.md\n"
+            "+++ b/README.md\n"
+            "@@ -1 +1 @@\n"
+            "-old\n"
+            "+new\n"
+        )
+        proc = subprocess.run(
+            [sys.executable, audit_script, "--check-diff", "--stdin"],
+            input=trivial_diff,
+            capture_output=True,
+            text=True
+        )
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("[SKIP]", proc.stdout)
+
+    def test_path_prefix_preserves_filename_starting_with_a_or_b(self):
+        import audit_debrief
+        diff = (
+            "diff --git a/authors b/authors\n"
+            "--- a/authors\n"
+            "+++ b/authors\n"
+            "@@ -1,2 +1,3 @@\n"
+            " Alice\n"
+            " Bob\n"
+            "+ Charlie\n"
+        )
+        res = audit_debrief.check_diff_complexity(diff)
+        self.assertFalse(res["should_debrief"], "Diff touching 'authors' metadata file must be skipped, not corrupted to 'uthors'")
+
+    def test_diff_complexity_cli_with_commit_msg_flag(self):
+        import subprocess
+        audit_script = os.path.join(BASE_DIR, "scripts", "audit_debrief.py")
+        diff = (
+            "diff --git a/src/worker.py b/src/worker.py\n"
+            "--- a/src/worker.py\n"
+            "+++ b/src/worker.py\n"
+            "@@ -1 +1 @@\n"
+            "-# note\n"
+            "+# updated note\n"
+        )
+        proc = subprocess.run(
+            [sys.executable, audit_script, "--check-diff", "--commit-msg", "feat(worker): background worker", "--stdin"],
+            input=diff,
+            capture_output=True,
+            text=True
+        )
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("[DEBRIEF]", proc.stdout)
+
+    def test_comment_edits_do_not_trigger_logic(self):
+        import audit_debrief
+        diff = (
+            "diff --git a/src/worker.py b/src/worker.py\n"
+            "--- a/src/worker.py\n"
+            "+++ b/src/worker.py\n"
+            "@@ -1,3 +1,3 @@\n"
+            "-// Check if state is locked\n"
+            "+// Check if cache state is safely locked before retrying\n"
+        )
+        res = audit_debrief.check_diff_complexity(diff)
+        self.assertFalse(res["should_debrief"], "Diff editing only comment lines should not trigger logic check")
 
 if __name__ == "__main__":
     unittest.main()

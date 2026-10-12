@@ -122,5 +122,22 @@ class TestSkillStructure(unittest.TestCase):
         audit_script = os.path.join(scripts_dir, "audit_debrief.py")
         self.assertTrue(os.path.isfile(audit_script), "scripts/audit_debrief.py must exist")
 
+    def test_complexity_gating_documented(self):
+        with open(self.skill_md, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("Complexity Gating", content, "SKILL.md must contain a section on Complexity Gating")
+        self.assertIn("Skip Criteria", content, "SKILL.md must document Skip Criteria")
+        self.assertIn("Debrief Triggers", content, "SKILL.md must document Debrief Triggers")
+        self.assertIn("[Simplifeyn debrief skipped", content, "SKILL.md must document skipped format marker")
+
+    def test_readme_documents_gating(self):
+        with open(self.readme_md, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("Complexity Gating", content, "README.md must document Complexity Gating")
+        self.assertIn("/simplifeyn skip", content, "README.md must document '/simplifeyn skip'")
+
 if __name__ == "__main__":
     unittest.main()
+
