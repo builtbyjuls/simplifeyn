@@ -35,6 +35,8 @@ class TestSkillStructure(unittest.TestCase):
         frontmatter = frontmatter_match.group(1)
         self.assertIn("name: simplifeyn", frontmatter, "Frontmatter must contain 'name: simplifeyn'")
         self.assertIn("description:", frontmatter, "Frontmatter must contain 'description:'")
+        self.assertIn("Use when", frontmatter, "Frontmatter description must contain 'Use when' trigger context")
+        self.assertNotIn("disable-model-invocation:", frontmatter, "Non-standard disable-model-invocation should be omitted")
 
     def test_skill_sections(self):
         with open(self.skill_md, "r", encoding="utf-8") as f:
@@ -47,6 +49,7 @@ class TestSkillStructure(unittest.TestCase):
             "The Ladder",
             "Where the Picture Breaks",
             "Quality Audit Checklist",
+            "Always-On Project Rule",
         ]
         for section in required_sections:
             self.assertIn(section, content, f"SKILL.md must contain section '{section}'")
@@ -103,6 +106,7 @@ class TestSkillStructure(unittest.TestCase):
             "analogies.md",
             "ladder.md",
             "failure-modes.md",
+            "banned-words.txt",
         ]
         for ref in required_refs:
             ref_path = os.path.join(ref_dir, ref)

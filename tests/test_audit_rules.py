@@ -181,8 +181,8 @@ class TestAuditDebrief(unittest.TestCase):
             "Where the Picture Breaks: clients sharing the same seed can synchronize anyway.\n\n"
             "### The Ladder\n"
             "- **Level 0 (Plain):** Your computer waits twice as long each time instead of pestering the busy site every second.\n"
-            "- **Level 1 (Code):** `fetchWithRetry` now uses exponential backoff with jitter. Trade-off: up to 7.5s worst-case latency to eliminate stampedes.\n"
-            "- **Level 2 (Edge):** Retries blindly on 4xx client errors; delays over 6 retries exceed 1 minute without deadline budget.\n\n"
+            "- **Level 1 (Code):** `fetchWithRetry` now uses exponential backoff with jitter. Trade-off: up to 4.0s worst-case latency to eliminate stampedes.\n"
+            "- **Level 2 (Edge):** Retries only transport network failures; HTTP 4xx/5xx responses bypass retries without checking res.ok.\n\n"
             "### What Was Left Out\n"
             "Shared circuit breaker telemetry deferred to next PR.\n"
         )
@@ -219,7 +219,7 @@ class TestAuditDebrief(unittest.TestCase):
             "A host telling turned-away guests to wait with a dice roll so they do not all knock at once.\n\n"
             "```text\n"
             "[ Turned-Away Guest ] ---> [ Roll Dice & Wait ] ---> [ Knock on Door ]\n"
-            "    (Server 5xx Error)       (2^attempt + Jitter)       (Next Retry Attempt)\n"
+            "   (Network Drop / Reset)    (2^attempt + Jitter)       (Next Retry Attempt)\n"
             "                                      |\n"
             "                      [ Out of Patience? ---> Walk Away ]\n"
             "                        (Retries Exhausted)   (Throw Error)\n"
@@ -227,8 +227,8 @@ class TestAuditDebrief(unittest.TestCase):
             "Where the Picture Breaks: clients sharing the same seed can synchronize anyway.\n\n"
             "### 3. The Ladder\n"
             "- **Level 0 (Plain):** Your machine waits twice as long each time instead of pestering the busy site every second.\n"
-            "- **Level 1 (Code):** `fetchWithRetry` now doubles delay with up to 500ms jitter, trading 7.5s worst-case latency to eliminate stampedes.\n"
-            "- **Level 2 (Edge):** Retries all exceptions indiscriminately including 4xx errors; retries past 6 exceed 1 minute without deadline budget.\n\n"
+            "- **Level 1 (Code):** `fetchWithRetry` now doubles delay with up to 500ms jitter, trading 4.0s worst-case latency to eliminate stampedes.\n"
+            "- **Level 2 (Edge):** Retries only transport network failures; HTTP 4xx/5xx responses bypass retries without checking res.ok.\n\n"
             "### 4. What Was Left Out\n"
             "Circuit breaker state sharing across clients was deferred.\n"
         )
@@ -245,13 +245,13 @@ class TestAuditDebrief(unittest.TestCase):
             "A host telling turned-away guests to wait with a dice roll so they do not all knock at once.\n\n"
             "```text\n"
             "[ Turned-Away Guest ] ---> [ Roll Dice & Wait ] ---> [ Knock on Door ]\n"
-            "    (Server 5xx Error)       (2^attempt + Jitter)       (Next Retry Attempt)\n"
+            "   (Network Drop / Reset)    (2^attempt + Jitter)       (Next Retry Attempt)\n"
             "```\n\n"
             "Where the Picture Breaks: clients sharing the same seed can synchronize anyway.\n\n"
             "### 3. The Ladder\n"
             "- **Level 0 (Plain):** Your machine waits twice as long each time instead of pestering the busy site every second.\n"
-            "- **Level 1 (Code):** `fetchWithRetry` now doubles delay with up to 500ms jitter, trading 7.5s worst-case latency to eliminate stampedes.\n"
-            "- **Level 2 (Edge):** Retries all exceptions indiscriminately including 4xx errors; retries past 6 exceed 1 minute without deadline budget.\n\n"
+            "- **Level 1 (Code):** `fetchWithRetry` now doubles delay with up to 500ms jitter, trading 4.0s worst-case latency to eliminate stampedes.\n"
+            "- **Level 2 (Edge):** Retries only transport network failures; HTTP 4xx/5xx responses bypass retries without checking res.ok.\n\n"
             "### 4. What Was Left Out\n"
             "Circuit breaker state sharing across clients was deferred.\n\n"
             "Explore other lenses: /simplifeyn as warehouse | as workshop | as transit\n"
@@ -520,6 +520,134 @@ class TestAuditDebrief(unittest.TestCase):
         )
         res = audit_debrief.check_diff_complexity(diff)
         self.assertFalse(res["should_debrief"], "Diff editing only comment lines should not trigger logic check")
+
+    def test_ladder_must_have_exactly_three_bullets_rejects_four(self):
+        import audit_debrief
+        four_bullet_text = (
+            "### 1. In One Sentence\n"
+            "Requests check local memory before database disk.\n\n"
+            "### 2. The Tangible Picture\n"
+            "A cook keeping salt on the prep counter.\n\n"
+            "```text\n"
+            "[ Customer ] ---> [ Salt Counter ] ---> [ Meal Ready ]\n"
+            "  (Request)          (Cache)              (Reply)\n"
+            "```\n\n"
+            "Where the Picture Breaks: breaks when multiple cooks share table.\n\n"
+            "### 3. The Ladder\n"
+            "- **Level 0 (Plain):** Fast table.\n"
+            "- **Level 1 (Code):** In-memory map.\n"
+            "- **Level 1.5 (Detail):** Extra intermediate rung.\n"
+            "- **Level 2 (Maintainer):** Memory ceiling.\n\n"
+            "### 4. What Was Left Out\n"
+            "Clustering deferred.\n"
+        )
+        res = audit_debrief.audit_text(four_bullet_text)
+        self.assertFalse(res["passed"], "Ladder with 4 bullets must fail audit")
+        self.assertTrue(any("exactly 3 rungs" in e for e in res["errors"]))
+
+    def test_banned_word_just_flagged(self):
+        import audit_debrief
+        text_with_just = (
+            "### 1. In One Sentence\n"
+            "This is just a small cache wrapper in front of disk.\n\n"
+            "### 2. The Tangible Picture\n"
+            "A cook keeping salt on counter.\n\n"
+            "```text\n"
+            "[ Req ] ---> [ Counter ]\n"
+            "```\n\n"
+            "Where the Picture Breaks: breaks when out of salt.\n\n"
+            "### 3. The Ladder\n"
+            "- Level 0: counter.\n"
+            "- Level 1: map.\n"
+            "- Level 2: ceiling.\n\n"
+            "### 4. What Was Left Out\n"
+            "Nothing.\n"
+        )
+        res = audit_debrief.audit_text(text_with_just)
+        self.assertFalse(res["passed"], "Debrief with 'just' must fail audit")
+        self.assertTrue(any("just" in b.lower() for b in res["banned_words_found"]))
+
+    def test_banned_words_file_exists_and_synced(self):
+        import audit_debrief
+        banned_file = os.path.join(BASE_DIR, "references", "banned-words.txt")
+        self.assertTrue(os.path.isfile(banned_file), "references/banned-words.txt must exist as single source of truth")
+        with open(banned_file, "r", encoding="utf-8") as f:
+            file_words = [line.strip().lower() for line in f if line.strip() and not line.startswith("#")]
+
+        for word in ["basically", "simply", "just", "obviously", "trivial", "abstracted away", "optimized", "streamline"]:
+            self.assertIn(word, file_words, f"banned-words.txt must contain '{word}'")
+
+    def test_diff_complexity_security_or_boolean_flip_triggered(self):
+        import audit_debrief
+        # 1. Code boolean flip
+        code_diff = (
+            "diff --git a/src/auth.py b/src/auth.py\n"
+            "--- a/src/auth.py\n"
+            "+++ b/src/auth.py\n"
+            "@@ -10,1 +10,1 @@\n"
+            "-AUTH_REQUIRED = True\n"
+            "+AUTH_REQUIRED = False\n"
+        )
+        self.assertTrue(audit_debrief.check_diff_complexity(code_diff)["should_debrief"], "Boolean auth flip in code must trigger debrief")
+
+        # 2. Config boolean flip
+        config_diff = (
+            "diff --git a/config/server.yml b/config/server.yml\n"
+            "--- a/config/server.yml\n"
+            "+++ b/config/server.yml\n"
+            "@@ -5,1 +5,1 @@\n"
+            "-ssl: true\n"
+            "+ssl: false\n"
+        )
+        self.assertTrue(audit_debrief.check_diff_complexity(config_diff)["should_debrief"], "Config SSL flip in .yml must trigger debrief")
+
+        # 3. package.json script modification
+        pkg_diff = (
+            "diff --git a/package.json b/package.json\n"
+            "--- a/package.json\n"
+            "+++ b/package.json\n"
+            "@@ -8,1 +8,1 @@\n"
+            "-  \"test\": \"jest\"\n"
+            "+  \"test\": \"echo skip\"\n"
+        )
+        self.assertTrue(audit_debrief.check_diff_complexity(pkg_diff)["should_debrief"], "package.json test script bypass must trigger debrief")
+
+    def test_diff_complexity_lockfiles_and_ignores_skipped(self):
+        import audit_debrief
+        lock_diff = (
+            "diff --git a/package-lock.json b/package-lock.json\n"
+            "--- a/package-lock.json\n"
+            "+++ b/package-lock.json\n"
+            "@@ -50,2 +50,2 @@\n"
+            "-    \"version\": \"2.1.0\",\n"
+            "-    \"integrity\": \"sha512-old\"\n"
+            "+    \"version\": \"2.1.1\",\n"
+            "+    \"integrity\": \"sha512-new\"\n"
+        )
+        self.assertFalse(audit_debrief.check_diff_complexity(lock_diff)["should_debrief"], "package-lock.json should be skipped")
+
+        ignore_diff = (
+            "diff --git a/.gitignore b/.gitignore\n"
+            "--- a/.gitignore\n"
+            "+++ b/.gitignore\n"
+            "@@ -1,1 +1,2 @@\n"
+            " *.log\n"
+            "+*.tmp\n"
+        )
+        self.assertFalse(audit_debrief.check_diff_complexity(ignore_diff)["should_debrief"], ".gitignore should be skipped")
+
+    def test_diff_complexity_string_literals_do_not_trigger_keywords(self):
+        import audit_debrief
+        string_diff = (
+            "diff --git a/src/ui.ts b/src/ui.ts\n"
+            "--- a/src/ui.ts\n"
+            "+++ b/src/ui.ts\n"
+            "@@ -1,1 +1,1 @@\n"
+            "-const msg = \"wait for it\";\n"
+            "+const msg = \"wait for them\";\n"
+        )
+        res = audit_debrief.check_diff_complexity(string_diff)
+        self.assertFalse(res["should_debrief"], "Diff changing 'for' inside string literal should not trigger debrief")
 
 if __name__ == "__main__":
     unittest.main()

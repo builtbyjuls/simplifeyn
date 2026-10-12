@@ -1,0 +1,17 @@
+# Banned words and hand-waving jargon in Feynman debriefs
+# These words substitute fuzzy impressions or intellectual ego for mechanism.
+basically
+simply
+just
+obviously
+trivial
+abstracted away
+under the hood
+self-explanatory
+optimized
+optimizing
+streamline
+streamlined
+streamlining
+seamless
+seamlessly

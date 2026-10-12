@@ -73,6 +73,7 @@ class TestInstaller(unittest.TestCase):
         self.assertTrue(os.path.isfile(diff_script))
         self.assertTrue(os.access(diff_script, os.X_OK), "Installed scripts/get-diff.sh must be executable")
 
+    @unittest.skipUnless(os.path.isdir(os.path.join(BASE_DIR, ".git")), "Requires .git in BASE_DIR")
     def test_installer_pipe_execution(self):
         target_skills_dir = os.path.join(self.temp_dir, "skills")
         with open(self.installer, "r", encoding="utf-8") as f:
@@ -90,6 +91,7 @@ class TestInstaller(unittest.TestCase):
         installed_skill = os.path.join(target_skills_dir, "simplifeyn", "SKILL.md")
         self.assertTrue(os.path.isfile(installed_skill))
 
+    @unittest.skipUnless(os.path.isdir(os.path.join(BASE_DIR, ".git")), "Requires .git in BASE_DIR")
     def test_installer_pipe_from_external_directory(self):
         target_skills_dir = os.path.join(self.temp_dir, "skills")
         with open(self.installer, "r", encoding="utf-8") as f:

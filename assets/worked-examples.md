@@ -39,28 +39,28 @@ This document contrasts a typical AI agent's explanation of a code change with a
 
 ---
 
-### [GOOD] The Simplifeyn Debrief Output (< 150 Prose Words)
+### [GOOD] The Simplifeyn Debrief Output
 
 ### 1. In One Sentence
-When a server fails, we double the wait before each retry and add a random wobble so clients do not stampede at once.
+When network requests drop, we double the wait before each retry and add a random wobble so clients do not stampede at once.
 
 ### 2. The Tangible Picture
-A host telling turned-away guests to wait 1 minute, then 2, then 4, with a random dice roll so they do not all knock at once.
+A host telling turned-away guests to wait with a dice roll so they do not all knock at once.
 
 ```text
 [ Turned-Away Guest ] ---> [ Roll Dice & Wait ] ---> [ Knock on Door ]
-    (Server 5xx Error)       (2^attempt + Jitter)       (Next Retry Attempt)
-                                      |
-                      [ Out of Patience? ---> Walk Away ]
-                        (Retries Exhausted)   (Throw Error)
+(Network Drop / Reset)   (2^attempt + Jitter)       (Next Retry Attempt)
+                                  |
+                  [ Out of Patience? ---> Walk Away ]
+                    (Retries Exhausted)   (Throw Error)
 ```
 
-Where the picture breaks: clients that share the same pseudo-random seed can synchronize anyway.
+Where the picture breaks: clients sharing the same seed can synchronize anyway.
 
 ### 3. The Ladder
 - **Level 0 (Kitchen Table):** Your machine waits twice as long each time instead of pestering the busy site every second.
-- **Level 1 (Practitioner):** `fetchWithRetry` now doubles delay with up to 500ms jitter, trading 7.5s worst-case latency to eliminate stampedes.
-- **Level 2 (Maintainer):** Retries all exceptions indiscriminately including 4xx errors; retries past 6 exceed 1 minute without a deadline budget.
+- **Level 1 (Practitioner):** `fetchWithRetry` now doubles delay with up to 500ms jitter, trading 4.0s worst-case latency across 3 attempts to eliminate stampedes.
+- **Level 2 (Maintainer):** Retries only transport network failures (`fetch` rejections); HTTP 4xx/5xx responses resolve normally without retries unless checking `res.ok`.
 
 ### 4. What Was Left Out
 Circuit breaker state sharing across clients was deferred.

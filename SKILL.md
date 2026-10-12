@@ -3,8 +3,8 @@ name: simplifeyn
 description: >-
   Explains code changes, PR diffs, or completed feature implementations using the Richard Feynman technique:
   physical mechanism first, tangible everyday analogy with explicit breaking points, and a 3-rung ladder
-  from kitchen-table simplicity to maintainer edge-cases. Supports toggleable session mode via /simplifeyn on|off|status.
-disable-model-invocation: false
+  from kitchen-table simplicity to maintainer edge-cases. Use when the user asks "what did you do?",
+  "explain the changes", during PR reviews, or after completing code implementations. Supports toggleable session mode via /simplifeyn on|off|status.
 license: MIT
 metadata:
   tags: "code-explanation, feynman-technique, git-diff, code-review, learning"
@@ -52,7 +52,7 @@ When Toggle Mode is ON:
 - These rules apply to every code modification turn for the rest of the session.
 - They do not expire after a few turns and do not lapse when changing topics.
 - Deactivate only upon receiving `/simplifeyn off` or "stop simplifeyn mode".
-- **Note on Session State:** Agent Skills are instructions provided to the AI model, not persistent background daemons. Session toggling (`/simplifeyn on`) is an in-context behavioral instruction (best-effort across long contexts). For guaranteed repository-wide debriefs across every new session, use **Mode 4: Always-On Project Rule** in `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`.
+- **Note on Session State:** Agent Skills are instructions provided to the AI model, not persistent background daemons. Session toggling (`/simplifeyn on`) is an in-context behavioral instruction (best-effort across long contexts). For guaranteed repository-wide debriefs across every new session, use the [Always-On Project Rule](#always-on-project-rule) in `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`.
 
 ---
 
@@ -62,9 +62,9 @@ Not every code change warrants a full Feynman debrief. Over-explaining a 1-line 
 
 ### Skip Criteria (Do NOT Debrief)
 Skip the Feynman debrief when the change matches any of these conditions:
-1. **Documentation and Metadata Only:** Changes touch only `.md`, `.txt`, `.json`, `.lock`, `.yaml`, `.yml`, `.gitignore`, `LICENSE`, or configuration files with zero runtime logic changes.
+1. **Documentation, Lockfiles, and Ignores Only:** Changes touch only documentation (`.md`, `.txt`, `.rst`), package lockfiles (`package-lock.json`, `pnpm-lock.yaml`, `Cargo.lock`), or repository ignores (`.gitignore`, `.editorconfig`, `LICENSE`). Changes to runtime configs (`.json`, `.yml`, `.yaml`, `.toml`) containing logic, security flags, or build/CI commands must be debriefed.
 2. **Cosmetic and Styling:** Pure formatting, whitespace, comment clarifications, lint fixes, or variable renames without behavioral shifts.
-3. **Trivial One-Liners:** Modifying a static constant, updating an environment variable string, or adjusting an off-by-one loop index without architectural consequence.
+3. **Trivial One-Liners:** Modifying a static display string or comment without architectural consequence.
 4. **Conventional Commit Signals:** Commits prefixed with `docs:`, `chore:`, `style:`, `ci:`, `build:`, or trivial `fix(typo):`.
 
 **Behavior When Skipped:** Output a standard concise summary sentence followed by:
@@ -75,22 +75,22 @@ Always produce a full Feynman debrief when:
 1. **Causal Mechanism Shift:** Data moves, transforms, or persists through different stages, states, or threads than before.
 2. **Concurrency, Performance, or Scale:** Caching, locks, debouncing, exponential backoff, rate limiting, async loops, or race condition fixes.
 3. **New Features and Contract Changes:** New public APIs, schema migrations, state machines, or business logic.
-4. **Conventional Commit Signals:** Commits prefixed with `feat:`, `perf:`, non-trivial `fix:`, or structural `refactor:`.
-5. **Explicit Invocation:** The user explicitly typed `/simplifeyn`, or asked *"explain what you did"*.
-
+4. **Security, Auth, or Runtime Config:** Any change altering authentication flags (`AUTH_REQUIRED`), SSL/TLS settings, permissions, or CI test steps.
+5. **Conventional Commit Signals:** Commits prefixed with `feat:`, `perf:`, non-trivial `fix:`, or structural `refactor:`.
+6. **Explicit Invocation:** The user explicitly typed `/simplifeyn`, or asked *"explain what you did"*.
 
 ---
 
 ## The Workflow
 
 1. **Inspect the Diff:**
-   Run `./scripts/get-diff.sh` (or examine the modified files/diff) to understand the concrete state transitions and data flows that changed.
+   Run `git diff` (or `./scripts/get-diff.sh` if available) to understand the concrete state transitions and data flows that changed.
 2. **Isolate the Causal Mechanism:**
    Ask: *If electricity and bits were physical water or gears, what physically moved differently before vs. after this change?*
 3. **Format the Response:**
    Follow the **Core Debrief Structure** below strictly.
 4. **Run the Pre-Send Audit:**
-   Audit the drafted explanation against the [Quality Audit Checklist](#quality-audit-checklist).
+   Verify the debrief against the [Quality Audit Checklist](#quality-audit-checklist). When running in CLI or CI environments, execute `python3 scripts/audit_debrief.py` to programmatically validate the debrief.
 
 ---
 
@@ -102,7 +102,7 @@ This skill is called Simplifeyn: it must simplify, not generate an essay. Follow
 2. **No Preamble, No Recap, No Closing Pleasantries:**
    - Forbidden openers: "Sure!", "Here is what changed:", "I have implemented...", "Looking at the changes..."
    - Forbidden closers: "Hope this helps!", "Let me know if you need anything else.", "Feel free to ask."
-   - Start immediately with the first heading. End when the last bullet is done.
+   - Start immediately with the first heading (Section 1). Conclude after Section 4 (What Was Left Out) and the lens exploration footer without conversational sign-offs.
 3. **One Sentence / Bullet Cap:** Every section has a strict length limit:
    - In One Sentence: Exactly 1 sentence.
    - The Picture & Where the Picture Breaks: 1 to 2 sentences total, accompanied by a compact 2-4 line ASCII mechanism flow diagram (`[ Input ] ---> [ Guard ] ---> [ Output ]`).
@@ -132,10 +132,10 @@ Provide one sensory physical analogy and state Where the Picture Breaks in 1 to 
 
 ```text
 [ Turned-Away Guest ] ---> [ Roll Dice & Wait ] ---> [ Knock on Door ]
-    (Server 5xx Error)       (2^attempt + Jitter)       (Next Retry Attempt)
-                                      |
-                      [ Out of Patience? ---> Walk Away ]
-                        (Retries Exhausted)   (Throw Error)
+(Network Drop / Reset)   (2^attempt + Jitter)       (Next Retry Attempt)
+                                  |
+                  [ Out of Patience? ---> Walk Away ]
+                    (Retries Exhausted)   (Throw Error)
 ```
 
   *Where the Picture Breaks: clients that share the same clock seed can synchronize anyway."*
@@ -180,3 +180,21 @@ Before outputting the debrief, prune and verify against [failure-modes.md](./ref
 - [ ] **Complete Ladder:** Contains exactly 3 single-line rungs: Level 0 (Plain), Level 1 (Code & trade-offs), and Level 2 (Invariants & failure modes).
 - [ ] **Analogy Limits Named:** States the exact boundary where the mental model breaks.
 - [ ] **The "Planes Don't Land" Test:** Does the change solve the actual causal problem, or is it just defensive scaffolding?
+
+---
+
+## Always-On Project Rule
+
+To enforce Feynman debriefs repository-wide across every session without relying on session memory, add this block to your repository's `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`:
+
+```markdown
+## Post-Implementation Debrief
+Whenever you complete a feature implementation, bug fix, or significant code modification, conclude your response with a lean Feynman Debrief (< 150 words prose, zero conversational preamble):
+1. In One Sentence: The physical delta without buzzwords (1 sentence).
+2. The Tangible Picture: One mechanical analogy and where the picture breaks, with an ASCII mechanism flow diagram (1-2 sentences).
+3. The Ladder: Exactly 3 single-line rungs: Level 0 (zero jargon) -> Level 1 (code & trade-offs) -> Level 2 (failure modes & scale ceilings).
+4. What Was Left Out: Deferred concerns and assumptions (1 line).
+5. Lens Footer: Suggest alternative lenses.
+If the change is trivial (pure docs, lockfiles, formatting), output a 1-line note and append:
+`[Simplifeyn debrief skipped: cosmetic/trivial change without causal mechanism shift]`
+```

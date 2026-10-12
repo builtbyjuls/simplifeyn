@@ -20,7 +20,7 @@ Feynman explained physics through physical, bodily mechanics. In software, code 
 
 ## 2. Banned Words (Measurement, Not Taste)
 
-In 88,000 words of Richard Feynman's verified primary lectures, the word *"basically"* appears exactly zero times. *"Trivial"* appears once.
+Richard Feynman maintained that if you cannot explain something in plain words without relying on hand-waving crutches, you do not truly understand it. See [banned-words.txt](./banned-words.txt) for the full machine-enforced blocklist.
 
 The following words are **strictly banned** in a Feynman debrief:
 
@@ -28,7 +28,8 @@ The following words are **strictly banned** in a Feynman debrief:
 * [BANNED] **"Simply" / "Just"**: Downplays real difficulty. If something takes 4 hours of debugging, it is never "simply a matter of changing a flag."
 * [BANNED] **"Obviously"**: If it were obvious, nobody would need an explanation. It alienates learners and blinds experts.
 * [BANNED] **"Trivial"**: An assertion of intellectual ego that adds zero pedagogical value.
-* [BANNED] **"Abstracted away"**: Hides where the work actually went. Name the machine that does the work.
+* [BANNED] **"Abstracted away" / "Under the hood"**: Hides where the work actually went. Name the machine that does the work.
+* [BANNED] **"Optimized" / "Streamlined"**: Empty corporate buzzwords that obscure concrete engineering trade-offs.
 
 ---
 

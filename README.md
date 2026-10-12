@@ -3,7 +3,6 @@
 [![Agent Skills Standard](https://img.shields.io/badge/Agent%20Skills-Standard-blue.svg)](https://agentskills.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 [![CI](https://github.com/builtbyjuls/simplifeyn/actions/workflows/ci.yml/badge.svg)](https://github.com/builtbyjuls/simplifeyn/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen.svg)](./tests)
 
 > **An Agent Skill that explains code changes, PR diffs, and feature implementations the way Richard Feynman explained physics: physical mechanism first, one honest everyday analogy with its exact limits, and a ladder from kitchen-table simplicity to maintainer edge cases.**
 
@@ -51,7 +50,11 @@ When AI agents implement features or fix bugs, they default to reciting files an
 Install directly to your coding assistant with zero cloning:
 
 ```bash
+# Latest main:
 curl -fsSL https://raw.githubusercontent.com/builtbyjuls/simplifeyn/main/install.sh | bash
+
+# Pinned release (v0.1.0):
+curl -fsSL https://raw.githubusercontent.com/builtbyjuls/simplifeyn/v0.1.0/install.sh | bash
 ```
 
 Or target a specific client via pipe:
@@ -80,7 +83,7 @@ cd /tmp/simplifeyn
 ./install.sh --project       # Installs to current repo: .agents/skills/
 ```
 
-### 2. Manual Drop-in (One Folder)
+### Manual Drop-in (One Folder)
 
 Copy the `simplifeyn` folder into whichever skill directory your CLI uses:
 
@@ -118,14 +121,15 @@ Turn Feynman debriefing on or off dynamically during your session:
 Simplifeyn avoids over-explaining trivial edits (like a 1-line typo fix, dependency bump, or formatting tweak). The skill applies automatic complexity gating:
 
 * **Skipped (`[Simplifeyn debrief skipped: cosmetic/trivial change without causal mechanism shift]`):**
-  - Docs & Metadata: Changes touching only `.md`, `.json`, `.lock`, `.yml`, `.gitignore`, `LICENSE`.
+  - Docs, Lockfiles & Ignores: Changes touching only `.md`, `.txt`, `.rst`, lockfiles (`package-lock.json`, `pnpm-lock.yaml`, `Cargo.lock`), or repository ignores (`.gitignore`, `.editorconfig`, `LICENSE`).
   - Cosmetic: Formatting, lint cleanups, comment revisions, or variable renames without logic shifts.
-  - Trivial 1-Liners: Small constant or string adjustments (< 5 lines, no control flow).
+  - Trivial 1-Liners: Small display string adjustments (< 5 lines, no control flow).
   - Conventional commits: `docs:`, `chore:`, `style:`, `ci:`, `build:`, trivial `fix(typo):`.
 * **Debriefed:**
   - Causal mechanism shifts: Data flows through different paths, buffers, or states.
   - Concurrency & Performance: Caching, locks, retries, jitter, debounce, or race conditions.
   - New features & refactors: New endpoints, state machines, business logic.
+  - Security & Runtime Configs: Altering auth flags (`AUTH_REQUIRED`), SSL/TLS settings, permissions, or CI test steps.
   - Conventional commits: `feat:`, `perf:`, non-trivial `fix:`, structural `refactor:`.
   - Explicit invocation: `/simplifeyn` or user asks for explanation.
 
@@ -177,6 +181,8 @@ Whenever you complete a feature implementation, bug fix, or significant code mod
 ## Quality Linter & Test Suite
 
 This repository is built with **Test-Driven Development (TDD)** and includes an automated audit linter to verify that explanations adhere to Feynman principles:
+
+> **Scope of the Linter:** The linter verifies structural sections, word count boundaries, banned buzzwords, and stylistic tone (heuristic form check). It does not evaluate the factual domain accuracy of technical claims.
 
 ```bash
 # Run the test suite

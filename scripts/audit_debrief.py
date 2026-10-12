@@ -15,6 +15,7 @@ BANNED_WORDS = [
     r"\bbasically\b",
     r"\bobviously\b",
     r"\bsimply\b",
+    r"\bjust\b",
     r"\btrivial\b",
     r"\babstracted away\b",
     r"\bunder the hood\b",  # often used as hand-waving instead of actually explaining
@@ -27,6 +28,17 @@ BANNED_WORDS = [
     r"\bseamless\b",
     r"\bseamlessly\b",
 ]
+
+# Load centralized banned words file if present
+_banned_ref = os.path.join(os.path.dirname(__file__), "..", "references", "banned-words.txt")
+if os.path.isfile(_banned_ref):
+    try:
+        with open(_banned_ref, "r", encoding="utf-8") as _f:
+            _words = [rf"\b{line.strip()}\b" for line in _f if line.strip() and not line.startswith("#")]
+            if _words:
+                BANNED_WORDS = _words
+    except Exception:
+        pass
 
 BANNED_PREAMBLES = [
     r"(?i)(?:^|\n)\s*(?:Sure[!,.]?|Certainly[!,.]?|Great question[!,.]?|Here is|Here's|I have (?:implemented|completed|updated|fixed)|Looking at the)",
@@ -115,7 +127,7 @@ def audit_text(text: str) -> Dict[str, Any]:
             errors.append("The Ladder must include Level 2 (Maintainer level with failure modes and scale ceilings)")
 
         bullets = [line for line in ladder_text.splitlines() if re.match(r"^\s*[-*]\s+", line)]
-        if len(bullets) < 3:
+        if len(bullets) != 3:
             errors.append(f"The Ladder must have exactly 3 rungs (found {len(bullets)} bullets).")
 
     passed = len(errors) == 0
@@ -128,14 +140,16 @@ def audit_text(text: str) -> Dict[str, Any]:
         "total_word_count": total_words,
     }
 
-DOCS_AND_META_EXTS = {
-    ".md", ".markdown", ".txt", ".rst", ".adoc",
-    ".json", ".lock", ".toml", ".yaml", ".yml",
-    ".ini", ".cfg", ".editorconfig", ".gitignore",
-    ".gitattributes", ".npmignore", ".dockerignore",
+DOCS_EXTS = {".md", ".markdown", ".txt", ".rst", ".adoc"}
+LOCKFILES_AND_IGNORES = {
+    "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "cargo.lock",
+    "gemfile.lock", "composer.lock", "poetry.lock",
+    ".gitignore", ".gitattributes", ".editorconfig",
+    ".npmignore", ".dockerignore", "license", "notice", "authors",
 }
+CONFIG_OR_CI_EXTS = {".json", ".yml", ".yaml", ".toml", ".ini", ".env", ".conf"}
 
-LOGIC_INDICATORS = [
+CONTROL_FLOW_INDICATORS = [
     r"\bdef\s+",
     r"\bclass\s+",
     r"\bfunction\b",
@@ -152,10 +166,52 @@ LOGIC_INDICATORS = [
     r"\breturn\b",
     r"\bthrow\b",
     r"\braise\b",
+]
+
+SECURITY_AND_STATE_INDICATORS = [
+    r"\b(true|false|True|False)\b",
+    r"\bauth\b",
+    r"\bssl\b",
+    r"\btls\b",
+    r"\btoken\b",
+    r"\bsecret\b",
+    r"\bpassword\b",
+    r"\badmin\b",
     r"\bmutex\b",
     r"\block\b",
     r"\bcache\b",
     r"\bstate\b",
+    r"\b[A-Z][A-Z0-9_]{2,}\s*=",
+]
+
+CONFIG_RISK_INDICATORS = [
+    r"\b(true|false|True|False)\b",
+    r"\bauth\b",
+    r"\bssl\b",
+    r"\btls\b",
+    r"\btoken\b",
+    r"\bsecret\b",
+    r"\bpassword\b",
+    r"\badmin\b",
+    r"\btests?\b",
+    r"\bscripts?\b",
+    r"\brun\b",
+    r"\bbuild\b",
+    r"\bci\b",
+    r"\bdeploy\b",
+    r"\bexec\b",
+    r"\bcmd\b",
+    r"\bcommand\b",
+    r"\bpreinstall\b",
+    r"\bpostinstall\b",
+    r"\bport\b",
+    r"\bhost\b",
+    r"\bendpoint\b",
+    r"\burl\b",
+    r"\benv\b",
+    r"\bdependencies\b",
+    r"\bdevdependencies\b",
+    r"\b[A-Z][A-Z0-9_]{2,}\s*=",
 ]
 
 def check_diff_complexity(diff_text: str, commit_msg: str = "") -> Dict[str, Any]:
@@ -191,38 +247,90 @@ def check_diff_complexity(diff_text: str, commit_msg: str = "") -> Dict[str, Any
                 if path and path != "/dev/null":
                     files_changed.add(path)
 
+    has_config_or_ci = False
+    has_dedicated_ci_pipeline = False
     if files_changed:
-        all_docs_meta = True
+        all_docs_or_locks = True
         for path in files_changed:
             base = os.path.basename(path).lower()
             name, ext = os.path.splitext(base)
-            if ext in DOCS_AND_META_EXTS or base in ("license", "readme", "notice", "contributing", "authors"):
+            if ext in DOCS_EXTS or base in LOCKFILES_AND_IGNORES or base.endswith(".lock"):
                 continue
-            all_docs_meta = False
-            break
+            all_docs_or_locks = False
+            if ext in CONFIG_OR_CI_EXTS:
+                has_config_or_ci = True
+            if ".github" in path or ".circleci" in path:
+                has_dedicated_ci_pipeline = True
 
-        if all_docs_meta:
+        if all_docs_or_locks:
             return {
                 "should_debrief": False,
                 "action": "skip",
-                "reason": "Only documentation, configuration, or metadata files were modified.",
+                "reason": "Only documentation, lockfiles, or repository metadata were modified.",
             }
 
     # 3. Analyze modified lines
     added_or_removed = []
+    has_non_comment_content = False
     for line in diff_text.splitlines():
         if (line.startswith("+") and not line.startswith("+++")) or (line.startswith("-") and not line.startswith("---")):
             content_line = line[1:].strip()
             if content_line:
                 added_or_removed.append(content_line)
+                stripped = re.sub(r"^\s*(?://|#|/\*|\*).*$", "", content_line).strip()
+                if stripped:
+                    has_non_comment_content = True
+
+    if not has_non_comment_content:
+        return {
+            "should_debrief": False,
+            "action": "skip",
+            "reason": "Diff contains only comments or whitespace changes.",
+        }
+
+    if has_dedicated_ci_pipeline:
+        return {
+            "should_debrief": True,
+            "action": "debrief",
+            "reason": "CI pipeline modification.",
+        }
+
+    if has_config_or_ci:
+        for line in added_or_removed:
+            stripped = re.sub(r"^\s*(?://|#|/\*|\*).*$", "", line).strip()
+            if not stripped:
+                continue
+            for indicator in CONFIG_RISK_INDICATORS:
+                if re.search(indicator, stripped, flags=re.IGNORECASE if not indicator.startswith(r"\b[A-Z]") else 0):
+                    return {
+                        "should_debrief": True,
+                        "action": "debrief",
+                        "reason": "Configuration, runtime settings, or dependency script modification.",
+                    }
+        if len(added_or_removed) <= 4:
+            return {
+                "should_debrief": False,
+                "action": "skip",
+                "reason": "Configuration metadata change with zero runtime or script logic shifts.",
+            }
 
     has_logic = False
     for line in added_or_removed:
         stripped = re.sub(r"^\s*(?://|#|/\*|\*).*$", "", line).strip()
         if not stripped:
             continue
-        for indicator in LOGIC_INDICATORS:
-            if re.search(indicator, stripped):
+        # Security, state, boolean, or constant indicators
+        for indicator in SECURITY_AND_STATE_INDICATORS:
+            if re.search(indicator, stripped, flags=re.IGNORECASE if not indicator.startswith(r"\b[A-Z]") else 0):
+                has_logic = True
+                break
+        if has_logic:
+            break
+        # Strip string literals so words inside quotes (e.g. "wait for it") don't match control flow keywords
+        line_code_only = re.sub(r'"(?:\\.|[^"\\])*"', '""', stripped)
+        line_code_only = re.sub(r"'(?:\\.|[^'\\])*'", "''", line_code_only)
+        for indicator in CONTROL_FLOW_INDICATORS:
+            if re.search(indicator, line_code_only, flags=re.IGNORECASE):
                 has_logic = True
                 break
         if has_logic:
