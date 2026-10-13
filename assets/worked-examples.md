@@ -39,31 +39,66 @@ This document contrasts a typical AI agent's explanation of a code change with a
 
 ---
 
-### [GOOD] The Simplifeyn Debrief Output
+### [GOOD] The Simplifeyn Debrief Output (Default: Vibe Coder Lens)
 
 ### 1. In One Sentence
-On network failure, retry delays double with random jitter to prevent client stampedes.
+When connection drops, the app pauses a few seconds before trying again so the screen does not freeze.
 
 ### 2. The Tangible Picture
-A host telling turned-away guests to wait with a dice roll so they do not all knock together.
+Knocking on a locked store: instead of banging every second, you wait two seconds, then four, so you do not break the door.
 
 ```text
-[ Turned-Away Guest ] ---> [ Roll Dice & Wait ] ---> [ Knock on Door ]
-(Network Drop / Reset)   (2^attempt + Jitter)       (Next Retry Attempt)
-                                  |
-                  [ Out of Patience? ---> Walk Away ]
-                    (Retries Exhausted)   (Throw Error)
+[ Door Locked ] ---> [ Wait 2s, then 4s ] ---> [ Try Door Again ]
+ (Network Drop)        (Longer Pauses)          (Second Attempt)
+                               |
+                [ Still Locked? ---> Walk Away ]
+                (Tries Run Out)   (Show Helpful Message)
 ```
 
-Where the picture breaks: breaks if clients share a clock seed.
+Where the picture breaks: if everyone's watch shares the exact second, they still knock together.
 
 ### 3. The Ladder
-- **Level 0 (Kitchen Table):** Your machine waits twice as long each time instead of pestering the site.
-- **Level 1 (Practitioner):** `fetchWithRetry` doubles delay with 500ms jitter, trading 4.0s latency to stop stampedes.
-- **Level 2 (Maintainer):** Retries transport failures only; 4xx/5xx responses resolve normally without retries.
+- **Level (Vibe Coder):** Spacing out retry pauses keeps the app smooth during bad Wi-Fi instead of locking the page.
+
+### 4. The Screen Test
+Turn off Wi-Fi, click the button in app preview, and watch the app pause and retry twice before showing an error.
+
+### 5. The Danger Zone (Prompt Safety)
+- What Can Break: Never use on payment buttons, or customers get charged twice when Wi-Fi stutters.
+- Next Prompt: Tell your AI: Keep retry on client.ts, but never retry checkout forms.
+
+### 6. What Was Left Out
+Wrong passwords and missing pages error immediately without retrying.
+
+Explore other lenses: /simplifeyn for junior-dev | for senior-dev | as transit
+
+---
+
+### [OPTIONAL] Full 3-Rung Ladder Output (/simplifeyn --full)
+
+### 1. In One Sentence
+On network drop, fetchWithRetry doubles delay intervals with random jitter to space out re-attempts and avoid swamping the endpoint.
+
+### 2. The Tangible Picture
+Knocking on a locked store: instead of banging every second, you wait two seconds, then four, so you do not break the door.
+
+```text
+[ Door Locked ] ---> [ Wait 2s, then 4s ] ---> [ Try Door Again ]
+ (Network Drop)        (Longer Pauses)          (Second Attempt)
+                               |
+                [ Still Locked? ---> Walk Away ]
+                (Tries Run Out)   (Show Helpful Message)
+```
+
+Where the picture breaks: if everyone's watch shares the exact second, they still knock together.
+
+### 3. The Ladder
+- **Level 0 (Vibe Coder):** The app pauses two seconds, then four, so your phone stays responsive while reconnecting.
+- **Level 1 (Junior Dev):** fetchWithRetry doubles wait time using Math.pow(2, attempt) plus Math.random() jitter before re-throwing on exhaustion.
+- **Level 2 (Senior Dev):** Prevents synchronized retry spikes on recovering backends, but non-idempotent mutations risk duplicate processing.
 
 ### 4. The Ice-Water Test
-Throttle DevTools to Offline, trigger request, and observe console retry delay double before failing.
+Throttle DevTools Network to Offline, trigger fetchWithRetry, and observe console retry intervals double before failing.
 
 ### 5. Where the Machine Snaps
 Snaps on non-idempotent POST calls, duplicating charges without an idempotency key.

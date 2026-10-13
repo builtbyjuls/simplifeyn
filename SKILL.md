@@ -2,9 +2,10 @@
 name: simplifeyn
 description: >-
   Explains code changes, PR diffs, or completed feature implementations using the Richard Feynman technique:
-  physical mechanism first, tangible everyday analogy with explicit breaking points, and a 3-rung ladder
-  from kitchen-table simplicity to maintainer edge-cases. Use when the user asks "what did you do?",
-  "explain the changes", during PR reviews, or after completing code implementations. Supports toggleable session mode via /simplifeyn on|off|status.
+  physical mechanism first, tangible everyday analogy with explicit breaking points, and an audience-calibrated
+  ladder (defaults to vibe-coder prompt safety; supports junior-dev and senior-dev lenses, or --full). Use when the user
+  asks "what did you do?", "explain the changes", during PR reviews, or after completing code implementations.
+  Supports toggleable session mode via /simplifeyn on|off|status.
 license: MIT
 metadata:
   tags: "code-explanation, feynman-technique, git-diff, code-review, learning"
@@ -13,7 +14,7 @@ metadata:
 
 # Simplifeyn: Implementation Debrief
 
-An Agent Skill that turns software changes and PR diffs into clear, mechanistic explanations modeled on Richard Feynman's principles of understanding: **mechanism before name**, **one tangible analogy with its exact limits**, and a **progressive ladder from kitchen table to system maintainer**.
+An Agent Skill that turns software changes and PR diffs into clear, mechanistic explanations modeled on Richard Feynman's principles of understanding: **mechanism before name**, **one tangible analogy with its exact limits**, and an **audience-calibrated ladder from vibe coder to system maintainer**.
 
 ## When to Use
 
@@ -88,7 +89,7 @@ Always produce a full Feynman debrief when:
 ## The Workflow
 
 1. **Inspect the Diff:**
-   Run `git diff` (e.g. `git diff HEAD~1` or `git diff --cached`) directly in the project repository as the primary method. If `simplifeyn` is installed or cloned, you can alternatively locate and execute `get-diff.sh` (e.g. `$(find ~/.gemini/skills ~/.claude/skills ~/.agents/skills -name get-diff.sh 2>/dev/null | head -n1)` or `<skill-dir>/scripts/get-diff.sh`).
+   Run `git diff` (e.g. `git diff HEAD~1` or `git diff --cached`) directly in the project repository as the primary method. If `simplifeyn` is installed or cloned, you can alternatively locate and execute `get-diff.sh` (e.g. `$(find ~/.gemini/config/skills ~/.gemini/skills ~/.claude/skills ~/.agents/skills -name get-diff.sh 2>/dev/null | head -n1)` or `<skill-dir>/scripts/get-diff.sh`).
 2. **Isolate the Causal Mechanism:**
    Ask: *If electricity and bits were physical water or gears, what physically moved differently before vs. after this change?*
 3. **Format the Response:**
@@ -111,9 +112,9 @@ This skill is called Simplifeyn: it must simplify, not generate an essay. Follow
 3. **One Sentence / Bullet Cap:** Every section has a strict length limit:
    - In One Sentence: Exactly 1 sentence.
    - The Picture & Where the Picture Breaks: 1 to 2 sentences total, accompanied by a compact 2-5 line ASCII mechanism flow diagram (`[ Input ] ---> [ Guard ] ---> [ Output ]`).
-   - The Ladder: 1 targeted bullet point for active audience (default vibe-coder), or exactly 3 rungs if full ladder mode is requested (--full).
-   - The Ice-Water Test: Exactly 1 physical sensory action (1 sentence).
-   - Where the Machine Snaps: Exactly 1 sentence naming the code mechanism's failure boundary under load, concurrency, or subsequent modifications.
+   - The Ladder: 1 targeted single-line rung for active audience (default vibe-coder: `- **Level (Vibe Coder):** ...`), or exactly 3 rungs if full ladder mode is requested (--full). Do NOT output 3 rungs unless --full is requested.
+   - The Screen Test / The Ice-Water Test: Exactly 1 physical sensory action (1 sentence).
+   - The Danger Zone / Where the Machine Snaps: Exactly 1-2 sentences naming boundary limits / prompt-safety instructions.
    - What Was Left Out: Exactly 1 line.
 
 ---
@@ -151,23 +152,25 @@ Provide one sensory physical analogy and state Where the Picture Breaks in 1 to 
 Deliver the explanation calibrated to the active audience level. By default, Simplifeyn calibrates for the **vibe-coder** audience and provides exactly 1 targeted single-line rung:
 - **Level (Vibe Coder):** 1 sentence. Focuses on what changes on screen or in user flow, how components connect, and what prompt to avoid next without confusing syntax or abstract buzzwords.
 
-When invoked for another audience (e.g. `/simplifeyn for junior-dev` or `/simplifeyn for senior-dev`), provide the targeted single-line rung for that level:
+> **CRITICAL RULE:** Do NOT output 3 rungs by default. Output ONLY the 1 targeted rung for the active audience (`- **Level (Vibe Coder):** ...`). Provide all 3 progressive rungs (`Level 0` -> `Level 1` -> `Level 2`) ONLY if the user explicitly requested `/simplifeyn --full`.
+
+When invoked for another audience (e.g. `/simplifeyn for junior-dev` or `/simplifeyn for senior-dev`), provide the single targeted rung for that level:
 - **Level (Junior Dev):** 1 sentence. Code symbols, data structures, and the fundamental programming patterns at play.
 - **Level (Senior Dev):** 1 sentence. Invariants, concurrency boundaries, latency/memory trade-offs, and scale ceilings.
 
 If full ladder mode is requested (`/simplifeyn --full`), provide all 3 progressive single-line rungs (Level 0 / Vibe Coder -> Level 1 / Junior Dev -> Level 2 / Senior Dev).
 
-### 4. The Ice-Water Test (The Screen Test)
-State exactly 1 sensory action the user can take right now to observe the mechanism in action.
-- **For Vibe Coders (Default):** Use **The Screen Test** -- a tangible, no-code action in the app preview or browser (e.g. toggle Wi-Fi, click a preview button, observe visual loading countdown) rather than terminal commands or DevTools panels.
-- **For Junior & Senior Devs:** State a direct DevTools, curl, or test execution command.
+### 4. The Screen Test (or The Ice-Water Test)
+State exactly 1 sensory action the user can take right now to observe the mechanism in action:
+- **For Vibe Coders (Default):** Use heading `### 4. The Screen Test` -- a tangible, no-code action in the app preview or browser (e.g. toggle Wi-Fi, click a preview button, observe visual loading countdown) rather than terminal commands or DevTools panels.
+- **For Junior & Senior Devs:** Use heading `### 4. The Ice-Water Test` -- a direct DevTools, curl, or test execution command.
 
-### 5. Where the Machine Snaps (The Danger Zone & Prompt Safety)
+### 5. The Danger Zone (Prompt Safety) (or Where the Machine Snaps)
 State the physical boundary limit or failure condition:
-- **For Vibe Coders (Default):** Use **The Danger Zone (Prompt Safety)**:
-  - *What Can Break:* Name the real-world product or user consequence in plain English (e.g. charging customers twice, hanging on dead servers, surprise bills). Zero abstract terms like "non-idempotent mutations".
-  - *Next Prompt:* Provide the exact, copy-pasteable prompt to tell the AI next so it doesn't break the feature in the next turn.
-- **For Junior & Senior Devs:** State the exact code mechanism limit (concurrency race, memory ceiling, unindexed database bottleneck, missing idempotency keys).
+- **For Vibe Coders (Default):** Use heading `### 5. The Danger Zone (Prompt Safety)`:
+  - `- What Can Break:` Name the real-world product or user consequence in plain English (e.g. charging customers twice, hanging on dead servers, surprise bills). Zero abstract terms like "non-idempotent mutations".
+  - `- Next Prompt:` Provide the exact, copy-pasteable prompt to tell the AI next so it doesn't break the feature in the next turn.
+- **For Junior & Senior Devs:** Use heading `### 5. Where the Machine Snaps` -- state the exact code mechanism limit in 1 sentence (concurrency race, memory ceiling, unindexed database bottleneck, missing idempotency keys).
 
 ### 6. What Was Left Out
 State what was intentionally simplified or deferred in 1 line.
@@ -227,9 +230,9 @@ To enforce Feynman debriefs repository-wide across every session without relying
 Whenever you complete a feature implementation, bug fix, or significant code modification, conclude your response with a lean Feynman Debrief (< 170 words prose, zero conversational preamble):
 1. In One Sentence: The physical delta without buzzwords (1 sentence).
 2. The Tangible Picture: One mechanical analogy and where the picture breaks, with an ASCII mechanism flow diagram (1-2 sentences).
-3. The Ladder: 1 targeted single-line rung for active audience (default vibe-coder) or all 3 progressive rungs (Level 0 -> Level 1 -> Level 2).
-4. The Ice-Water Test: 1 physical action in the browser/terminal to observe the mechanism (1 sentence).
-5. Where the Machine Snaps: 1 code boundary limit / prompt-stacking failure condition (1 sentence).
+3. The Ladder: 1 targeted single-line rung for active audience (default vibe-coder: Level (Vibe Coder)) or all 3 progressive rungs if requested with --full (Level 0 -> Level 1 -> Level 2).
+4. The Screen Test (or The Ice-Water Test for dev audiences): 1 physical action in browser/preview or terminal to observe the mechanism (1 sentence).
+5. The Danger Zone (Prompt Safety) (or Where the Machine Snaps for dev audiences): What Can Break and Next Prompt to keep AI on rails (1-2 sentences).
 6. What Was Left Out: Deferred concerns and assumptions (1 line).
 7. Lens Footer: Suggest alternative lenses.
 If the change is trivial (pure docs, lockfiles, formatting), output a 1-line note and append:
