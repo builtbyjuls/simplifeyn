@@ -152,6 +152,26 @@ class TestSkillStructure(unittest.TestCase):
         for domain in required_domains:
             self.assertIn(domain, analogies_content, f"analogies.md must document the '{domain}' domain")
 
+    def test_dynamic_audience_lenses_and_targeted_ladder_rung(self):
+        with open(self.skill_md, "r", encoding="utf-8") as f:
+            skill_content = f.read().lower()
+
+        self.assertIn("vibe-coder", skill_content, "SKILL.md must document 'vibe-coder' audience lens")
+        self.assertIn("junior-dev", skill_content, "SKILL.md must document 'junior-dev' audience lens")
+        self.assertIn("senior-dev", skill_content, "SKILL.md must document 'senior-dev' audience lens")
+        self.assertTrue(
+            any(k in skill_content for k in ["targeted rung", "targeted single-line rung", "targeted level"]),
+            "SKILL.md must document targeted ladder rung for active audience level"
+        )
+
+        ladder_path = os.path.join(BASE_DIR, "references", "ladder.md")
+        with open(ladder_path, "r", encoding="utf-8") as f:
+            ladder_content = f.read().lower()
+
+        self.assertIn("vibe-coder", ladder_content, "ladder.md must document vibe-coder level")
+        self.assertIn("junior-dev", ladder_content, "ladder.md must document junior-dev level")
+        self.assertIn("senior-dev", ladder_content, "ladder.md must document senior-dev level")
+
     def test_references_exist(self):
         ref_dir = os.path.join(BASE_DIR, "references")
         self.assertTrue(os.path.isdir(ref_dir), "references/ directory must exist")
@@ -237,6 +257,11 @@ class TestSkillStructure(unittest.TestCase):
         self.assertNotIn("150 prose words", readme_content, "README.md must not contain stale '150 prose words'")
         self.assertNotIn("220 words", skill_content, "SKILL.md must not contain stale '220 words'")
         self.assertNotIn("220 words", readme_content, "README.md must not contain stale '220 words'")
+
+    def test_combined_audience_and_theme_documented(self):
+        with open(self.readme_md, "r", encoding="utf-8") as f:
+            readme_content = f.read()
+        self.assertIn("for junior-dev as gaming", readme_content, "README.md must document combined audience and theme lens")
 
 if __name__ == "__main__":
     unittest.main()

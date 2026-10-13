@@ -158,7 +158,26 @@ Simplifeyn avoids over-explaining trivial edits (like pure documentation or lock
   - Explicit invocation: `/simplifeyn` or user asks for explanation.
 
 
-### Mode 2: Themed Lenses (`as <theme>` or `--as=<theme>`)
+### Mode 2: Audience Lenses (`for <audience>` or `--for=<audience>`)
+
+Calibrate the debrief to your technical comfort level (`vibe-coder`, `junior-dev`, `senior-dev`):
+
+```bash
+# Defaults to vibe-coder (app behavior, prompt safety, 1 targeted ladder rung):
+/simplifeyn
+
+# Target learning junior engineers (code symbols, patterns, trade-offs):
+/simplifeyn for junior-dev
+
+# Target systems maintainers (invariants, concurrency, scale limits):
+/simplifeyn for senior-dev
+
+# Combine audience with a themed lens:
+/simplifeyn for junior-dev as gaming
+/simplifeyn for senior-dev as transit
+```
+
+### Mode 3: Themed Lenses (`as <theme>` or `--as=<theme>`)
 
 Direct the debrief toward a specific physical domain (`kitchen`, `warehouse`, `workshop`, `transit`, `office`, `gaming`):
 
@@ -174,7 +193,7 @@ Direct the debrief toward a specific physical domain (`kitchen`, `warehouse`, `w
 
 If a requested lens fundamentally distorts the code mechanism, Simplifeyn enforces Feynman honesty: it outputs a 1-line disclaimer and falls back to the accurate domain.
 
-### Mode 3: One-Shot Command
+### Mode 4: One-Shot Command
 
 Run once for the latest change or a specific commit without enabling session persistence:
 
@@ -187,7 +206,7 @@ Run once for the latest change or a specific commit without enabling session per
 Or ask the agent in plain language:
 > *"Explain what you just implemented using the Feynman technique."*
 
-### Mode 4: Always-On Project Rule
+### Mode 5: Always-On Project Rule
 
 If you want your agent to conclude **every** feature implementation or bug fix with a Feynman Debrief automatically across the whole repo, add this block to your project's `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`:
 
@@ -196,7 +215,7 @@ If you want your agent to conclude **every** feature implementation or bug fix w
 Whenever you complete a feature implementation, bug fix, or significant code modification, conclude your response with a lean Feynman Debrief (< 170 words prose, zero conversational preamble):
 1. In One Sentence: The physical delta without buzzwords (1 sentence).
 2. The Tangible Picture: One mechanical analogy and where the picture breaks, with an ASCII mechanism flow diagram (1-2 sentences).
-3. The Ladder: Exactly 3 single-line rungs: Level 0 (zero jargon) -> Level 1 (code & trade-offs) -> Level 2 (failure modes & scale ceilings).
+3. The Ladder: 1 targeted single-line rung for active audience (default vibe-coder) or all 3 progressive rungs (Level 0 -> Level 1 -> Level 2).
 4. The Ice-Water Test: 1 physical action in the browser/terminal to observe the mechanism (1 sentence).
 5. Where the Machine Snaps: 1 code boundary limit / prompt-stacking failure condition (1 sentence).
 6. What Was Left Out: Deferred concerns and assumptions (1 line).

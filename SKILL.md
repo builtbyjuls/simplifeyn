@@ -36,11 +36,14 @@ This skill supports both one-shot commands and persistent session toggling:
 3. **Check Status (`/simplifeyn status`):**
    - Report whether persistent mode is currently ACTIVE or INACTIVE, and list active lens if set.
 4. **One-Shot Execution (`/simplifeyn` or `/simplifeyn once`):**
-   - Debrief only the latest diff or specified code change without changing persistent session state.
-5. **Themed Lens Selection (`/simplifeyn as <theme>` or `/simplifeyn --as=<theme>`):**
+   - Debrief only the latest diff or specified code change without changing persistent session state (defaults to `vibe-coder` audience).
+5. **Audience Lens Selection (`/simplifeyn for <audience>` or `/simplifeyn --for=<audience>`):**
+   - Calibrate the debrief to a specific audience role (`vibe-coder`, `junior-dev`, `senior-dev`). Defaults to `vibe-coder`.
+   - Can be combined with persistent mode or themes: `/simplifeyn for senior-dev as transit`.
+6. **Themed Lens Selection (`/simplifeyn as <theme>` or `/simplifeyn --as=<theme>`):**
    - Direct the debrief to draw analogies from a specific physical domain (`kitchen`, `warehouse`, `workshop`, `transit`, `office`, `gaming`).
    - Also supported with persistence: `/simplifeyn on as <theme>` (or `/simplifeyn on --as=<theme>`).
-6. **One-Turn Skip (`/simplifeyn skip` or `--no-debrief`):**
+7. **One-Turn Skip (`/simplifeyn skip` or `--no-debrief`):**
    - Suppress the debrief for the current turn without disabling persistent session mode.
 
 ## Persistence Rules
@@ -108,7 +111,7 @@ This skill is called Simplifeyn: it must simplify, not generate an essay. Follow
 3. **One Sentence / Bullet Cap:** Every section has a strict length limit:
    - In One Sentence: Exactly 1 sentence.
    - The Picture & Where the Picture Breaks: 1 to 2 sentences total, accompanied by a compact 2-5 line ASCII mechanism flow diagram (`[ Input ] ---> [ Guard ] ---> [ Output ]`).
-   - The Ladder: Exactly 3 bullet points (1 line per rung: L0 Plain, L1 Code, L2 Edge).
+   - The Ladder: 1 targeted bullet point for active audience (default vibe-coder), or exactly 3 rungs if full ladder mode is requested (--full).
    - The Ice-Water Test: Exactly 1 physical sensory action (1 sentence).
    - Where the Machine Snaps: Exactly 1 sentence naming the code mechanism's failure boundary under load, concurrency, or subsequent modifications.
    - What Was Left Out: Exactly 1 line.
@@ -145,24 +148,44 @@ Provide one sensory physical analogy and state Where the Picture Breaks in 1 to 
   *Where the Picture Breaks: clients that share the same clock seed can synchronize anyway."*
 
 ### 3. The Ladder
-Deliver the explanation across three tight single-line bullets:
-- **Level 0 (Kitchen Table / L0):** 1 sentence. Zero technical terms. What a non-programmer can picture.
-- **Level 1 (Practitioner / L1):** 1 sentence. Code symbols, data structures, and the primary trade-off.
-- **Level 2 (Maintainer / L2):** 1 sentence. Invariants, failure modes, or what breaks under load.
+Deliver the explanation calibrated to the active audience level. By default, Simplifeyn calibrates for the **vibe-coder** audience and provides exactly 1 targeted single-line rung:
+- **Level (Vibe Coder):** 1 sentence. Focuses on what changes on screen or in user flow, how components connect, and what prompt to avoid next without confusing syntax or abstract buzzwords.
 
-### 4. The Ice-Water Test
-State exactly 1 sensory action in the browser, terminal, or DevTools the user can take right now to observe the mechanism in action (e.g. click sequence, curl command, or inspected log/network panel).
+When invoked for another audience (e.g. `/simplifeyn for junior-dev` or `/simplifeyn for senior-dev`), provide the targeted single-line rung for that level:
+- **Level (Junior Dev):** 1 sentence. Code symbols, data structures, and the fundamental programming patterns at play.
+- **Level (Senior Dev):** 1 sentence. Invariants, concurrency boundaries, latency/memory trade-offs, and scale ceilings.
 
-### 5. Where the Machine Snaps
-State exactly 1 sentence naming the code mechanism's physical failure boundary or prompt-stacking limit (e.g. concurrency race, unindexed storage bottleneck, loss of state on restart, or non-idempotent duplicate mutation).
+If full ladder mode is requested (`/simplifeyn --full`), provide all 3 progressive single-line rungs (Level 0 / Vibe Coder -> Level 1 / Junior Dev -> Level 2 / Senior Dev).
+
+### 4. The Ice-Water Test (The Screen Test)
+State exactly 1 sensory action the user can take right now to observe the mechanism in action.
+- **For Vibe Coders (Default):** Use **The Screen Test** -- a tangible, no-code action in the app preview or browser (e.g. toggle Wi-Fi, click a preview button, observe visual loading countdown) rather than terminal commands or DevTools panels.
+- **For Junior & Senior Devs:** State a direct DevTools, curl, or test execution command.
+
+### 5. Where the Machine Snaps (The Danger Zone & Prompt Safety)
+State the physical boundary limit or failure condition:
+- **For Vibe Coders (Default):** Use **The Danger Zone (Prompt Safety)**:
+  - *What Can Break:* Name the real-world product or user consequence in plain English (e.g. charging customers twice, hanging on dead servers, surprise bills). Zero abstract terms like "non-idempotent mutations".
+  - *Next Prompt:* Provide the exact, copy-pasteable prompt to tell the AI next so it doesn't break the feature in the next turn.
+- **For Junior & Senior Devs:** State the exact code mechanism limit (concurrency race, memory ceiling, unindexed database bottleneck, missing idempotency keys).
 
 ### 6. What Was Left Out
 State what was intentionally simplified or deferred in 1 line.
 
-Conclude with a single tight exploration footer suggesting 2 to 3 alternative lenses:
-`Explore other lenses: /simplifeyn as <theme1> | as <theme2> | as <theme3>`
+Conclude with a single tight exploration footer suggesting the other 2 audience lenses and alternative theme lenses:
+`Explore other lenses: /simplifeyn for <other-role-1> | for <other-role-2> | as <theme>`
 
 See [worked-examples.md](./assets/worked-examples.md) for full before-and-after exemplar debriefs.
+
+---
+
+## Dynamic Audience Lenses
+
+Simplifeyn supports dynamic audience calibration using `/simplifeyn for <audience>` or `--for=<audience>`:
+
+1. **vibe-coder (Default):** Calibrated for creators directing AI agents through natural conversation. 100% free of engineering jargon (*POST, mutating, idempotency, endpoints, 4xx/5xx, telemetry, jitter, rethrowing, DevTools*). Focuses on screen behavior, plain-English user risks, and actionable prompts to keep the AI on rails.
+2. **junior-dev:** Calibrated for learners mastering codebase patterns. Focuses on exact code symbols, function roles, syntax structures, and core programming concepts.
+3. **senior-dev:** Calibrated for systems maintainers. Focuses on invariants, concurrency boundaries, scale ceilings, and edge-case transport/state failures.
 
 ---
 
@@ -187,7 +210,7 @@ Before outputting the debrief, prune and verify against [failure-modes.md](./ref
 - [ ] **No Banned Buzzwords:** Contains zero instances of hand-waving crutches or empty buzzwords listed in [banned-words.txt](./references/banned-words.txt) (*basically*, *simply*, *just*, *obviously*, *trivial*, *optimized*, *streamlined*, *under the hood*, *seamless*, *self-explanatory*, *abstracted away*).
 - [ ] **Sensory Verbs:** Uses mechanical, physical verbs (*pushes, catches, holds, drops, waits, locks*) rather than corporate hand-waving (*orchestrates, streamlines, optimizes*). See [voice.md](./references/voice.md).
 - [ ] **ASCII Mechanism Flow:** Contains a fenced pure-ASCII flow mapping physical analogy objects in `[ ]` to code mechanisms in `( )` underneath.
-- [ ] **Complete Ladder:** Contains exactly 3 single-line rungs: Level 0 (Plain), Level 1 (Code & trade-offs), and Level 2 (Invariants & failure modes).
+- [ ] **Calibrated Ladder Included:** Contains either 1 targeted single-line rung for the active audience level (Vibe Coder, Junior Dev, Senior Dev) or all 3 rungs for full ladder mode.
 - [ ] **Analogy Limits Named:** States the exact boundary where the mental model breaks.
 - [ ] **The Ice-Water Test Included:** Contains exactly 1 physical action in the browser, terminal, or DevTools to observe the mechanism in action.
 - [ ] **Where the Machine Snaps Included:** Identifies the exact code failure boundary under load, concurrency, or subsequent modifications.
@@ -204,7 +227,7 @@ To enforce Feynman debriefs repository-wide across every session without relying
 Whenever you complete a feature implementation, bug fix, or significant code modification, conclude your response with a lean Feynman Debrief (< 170 words prose, zero conversational preamble):
 1. In One Sentence: The physical delta without buzzwords (1 sentence).
 2. The Tangible Picture: One mechanical analogy and where the picture breaks, with an ASCII mechanism flow diagram (1-2 sentences).
-3. The Ladder: Exactly 3 single-line rungs: Level 0 (zero jargon) -> Level 1 (code & trade-offs) -> Level 2 (failure modes & scale ceilings).
+3. The Ladder: 1 targeted single-line rung for active audience (default vibe-coder) or all 3 progressive rungs (Level 0 -> Level 1 -> Level 2).
 4. The Ice-Water Test: 1 physical action in the browser/terminal to observe the mechanism (1 sentence).
 5. Where the Machine Snaps: 1 code boundary limit / prompt-stacking failure condition (1 sentence).
 6. What Was Left Out: Deferred concerns and assumptions (1 line).

@@ -759,6 +759,127 @@ class TestAuditDebrief(unittest.TestCase):
         self.assertFalse(res["passed"], "Ladder with 4 bullets must fail audit")
         self.assertTrue(any("exactly 3 rungs" in e for e in res["errors"]))
 
+    def test_ladder_single_rung_vibe_coder_passes(self):
+        import audit_debrief
+        text = (
+            "### 1. In One Sentence\n"
+            "On network failure, retry delays double with random jitter to prevent client stampedes.\n\n"
+            "### 2. The Tangible Picture\n"
+            "A host telling guests to wait with a dice roll so they do not all knock together.\n\n"
+            "```text\n"
+            "[ Turned Guest ] ---> [ Dice Roll & Wait ] ---> [ Knock Door ]\n"
+            " (Failed Request)       (Exponential Jitter)      (Retry Call)\n"
+            "```\n\n"
+            "Where the Picture Breaks: breaks if clients share a clock seed.\n\n"
+            "### 3. The Ladder\n"
+            "- **Level (Vibe Coder):** When an API fails, the app waits twice as long each try with a random wobble so we do not freeze or crash.\n\n"
+            "### 4. The Ice-Water Test\n"
+            "Throttle DevTools to Offline, trigger request, and observe console retry delay double.\n\n"
+            "### 5. Where the Machine Snaps\n"
+            "Snaps on non-idempotent POST calls; avoid prompt asking to blindly retry without idempotency key.\n\n"
+            "### 6. What Was Left Out\n"
+            "Circuit breaker telemetry across instances was deferred.\n\n"
+            "Explore other lenses: /simplifeyn for junior-dev | for senior-dev\n"
+        )
+        res = audit_debrief.audit_text(text)
+        self.assertTrue(res["passed"], f"Single rung for vibe-coder should pass audit: {res.get('errors')}")
+
+    def test_ladder_single_rung_junior_dev_passes(self):
+        import audit_debrief
+        text = (
+            "### 1. In One Sentence\n"
+            "On network failure, retry delays double with random jitter to prevent client stampedes.\n\n"
+            "### 2. The Tangible Picture\n"
+            "A host telling guests to wait with a dice roll so they do not all knock together.\n\n"
+            "```text\n"
+            "[ Turned Guest ] ---> [ Dice Roll & Wait ] ---> [ Knock Door ]\n"
+            " (Failed Request)       (Exponential Jitter)      (Retry Call)\n"
+            "```\n\n"
+            "Where the Picture Breaks: breaks if clients share a clock seed.\n\n"
+            "### 3. The Ladder\n"
+            "- **Level (Junior Dev):** `fetchWithRetry` implements exponential backoff with jitter and rethrows on the final attempt.\n\n"
+            "### 4. The Ice-Water Test\n"
+            "Throttle DevTools to Offline, trigger request, and observe console retry delay double.\n\n"
+            "### 5. Where the Machine Snaps\n"
+            "Snaps on non-idempotent POST calls, duplicating charges without an idempotency key.\n\n"
+            "### 6. What Was Left Out\n"
+            "Circuit breaker telemetry across instances was deferred.\n"
+        )
+        res = audit_debrief.audit_text(text)
+        self.assertTrue(res["passed"], f"Single rung for junior-dev should pass audit: {res.get('errors')}")
+
+    def test_ladder_single_rung_senior_dev_passes(self):
+        import audit_debrief
+        text = (
+            "### 1. In One Sentence\n"
+            "On network failure, retry delays double with random jitter to prevent client stampedes.\n\n"
+            "### 2. The Tangible Picture\n"
+            "A host telling guests to wait with a dice roll so they do not all knock together.\n\n"
+            "```text\n"
+            "[ Turned Guest ] ---> [ Dice Roll & Wait ] ---> [ Knock Door ]\n"
+            " (Failed Request)       (Exponential Jitter)      (Retry Call)\n"
+            "```\n\n"
+            "Where the Picture Breaks: breaks if clients share a clock seed.\n\n"
+            "### 3. The Ladder\n"
+            "- **Level (Senior Dev):** Retries transport errors only, bounded at 4.0s max delay, leaving idempotency key coordination to caller.\n\n"
+            "### 4. The Ice-Water Test\n"
+            "Throttle DevTools to Offline, trigger request, and observe console retry delay double.\n\n"
+            "### 5. Where the Machine Snaps\n"
+            "Snaps on non-idempotent POST calls, duplicating charges without an idempotency key.\n\n"
+            "### 6. What Was Left Out\n"
+            "Circuit breaker telemetry across instances was deferred.\n"
+        )
+        res = audit_debrief.audit_text(text)
+        self.assertTrue(res["passed"], f"Single rung for senior-dev should pass audit: {res.get('errors')}")
+
+    def test_ladder_unrecognized_single_rung_fails(self):
+        import audit_debrief
+        text = (
+            "### 1. In One Sentence\n"
+            "On network failure, retry delays double with random jitter to prevent client stampedes.\n\n"
+            "### 2. The Tangible Picture\n"
+            "A host telling guests to wait with a dice roll so they do not all knock together.\n\n"
+            "```text\n"
+            "[ Turned Guest ] ---> [ Dice Roll & Wait ] ---> [ Knock Door ]\n"
+            " (Failed Request)       (Exponential Jitter)      (Retry Call)\n"
+            "```\n\n"
+            "Where the Picture Breaks: breaks if clients share a clock seed.\n\n"
+            "### 3. The Ladder\n"
+            "- **Unrecognized Level:** Something that does not name a supported audience role.\n\n"
+            "### 4. The Ice-Water Test\n"
+            "Throttle DevTools to Offline, trigger request, and observe console retry delay double.\n\n"
+            "### 5. Where the Machine Snaps\n"
+            "Snaps on non-idempotent POST calls, duplicating charges without an idempotency key.\n\n"
+            "### 6. What Was Left Out\n"
+            "Circuit breaker telemetry across instances was deferred.\n"
+        )
+        res = audit_debrief.audit_text(text)
+        self.assertFalse(res["passed"], "Single rung without recognized audience role must fail audit")
+
+    def test_screen_test_and_danger_zone_headings_accepted(self):
+        import audit_debrief
+        text = (
+            "### 1. In One Sentence\n"
+            "When connection drops, the app pauses a few seconds before trying again so the screen does not freeze.\n\n"
+            "### 2. The Tangible Picture\n"
+            "Knocking on a locked store: instead of banging every second, you wait two seconds, then four.\n\n"
+            "```text\n"
+            "[ Door Locked ] ---> [ Wait 2s, 4s ] ---> [ Try Door Again ]\n"
+            " (Network Drop)        (Longer Pauses)      (Second Attempt)\n"
+            "```\n\n"
+            "Where the picture breaks: if everyone's watch shares the exact second, they knock together.\n\n"
+            "### 3. The Ladder\n"
+            "- **Level (Vibe Coder):** Spacing out retry pauses keeps the app smooth during bad Wi-Fi.\n\n"
+            "### 4. The Screen Test\n"
+            "Turn off Wi-Fi, click the button in preview, and watch the app pause and retry twice.\n\n"
+            "### 5. The Danger Zone\n"
+            "Never use on payment buttons, or customers get charged twice when Wi-Fi stutters.\n\n"
+            "### 6. What Was Left Out\n"
+            "Wrong passwords error immediately without retrying.\n"
+        )
+        res = audit_debrief.audit_text(text)
+        self.assertTrue(res["passed"], f"Screen Test and Danger Zone headings must pass audit: {res.get('errors')}")
+
     def test_banned_word_just_flagged(self):
         import audit_debrief
         text_with_just = (

@@ -34,8 +34,8 @@ REQUIRED_SECTIONS = [
     (r"(?i)#{1,3}\s+(?:\d+\.\s+)?The (?:Tangible\s+|Physical\s+)?Picture", "The Picture"),
     (r"(?i)#{1,3}\s+(?:\d+\.\s+)?The Ladder", "The Ladder"),
     (r"(?i)(?:#{1,3}\s+(?:\d+\.\s+)?Where the Picture Breaks|\bWhere the (?:Picture|Analogy) Breaks\b|\bbreaks\s+if\b|\bbreaking\s+point\b)", "Where the Picture Breaks"),
-    (r"(?i)(?:#{1,3}\s+(?:\d+\.\s+)?(?:The\s+)?Ice[- ]Water Test|\bIce[- ]Water Test\b)", "The Ice-Water Test"),
-    (r"(?i)(?:#{1,3}\s+(?:\d+\.\s+)?Where the Machine Snaps|\bWhere the Machine Snaps\b)", "Where the Machine Snaps"),
+    (r"(?i)(?:#{1,3}\s+(?:\d+\.\s+)?(?:The\s+)?(?:Ice[- ]Water|Screen) Test|\b(?:Ice[- ]Water|Screen) Test\b)", "The Ice-Water Test"),
+    (r"(?i)(?:#{1,3}\s+(?:\d+\.\s+)?(?:Where the Machine Snaps|The Danger Zone)|\b(?:Where the Machine Snaps|The Danger Zone)\b)", "Where the Machine Snaps"),
     (r"(?i)#{1,3}\s+(?:\d+\.\s+)?(?:What Was )?Left Out", "What Was Left Out"),
 ]
 
@@ -96,25 +96,38 @@ def audit_text(text: str) -> Dict[str, Any]:
         if not has_diagram:
             errors.append("Missing ASCII mechanism flow diagram in 'The Tangible Picture' (must include fenced block with [ Node ] ---> [ Node ])")
 
-    # Check that Ladder contains all 3 levels (Level 0, Level 1, Level 2) and 3 rungs
+    # Check that Ladder contains either 1 targeted rung for active audience or all 3 rungs (Level 0, Level 1, Level 2)
     if "The Ladder" not in missing_sections:
         ladder_match = re.search(r"(?i)#{1,3}\s+(?:\d+\.\s+)?The Ladder\s*\n+([\s\S]*?)(?=\n+#{1,3}|\Z)", text)
         ladder_text = ladder_match.group(1).strip() if ladder_match else text
 
-        has_l0 = bool(re.search(r"(?i)Level 0|Kitchen[- ]Table|\bL0\b", ladder_text))
-        has_l1 = bool(re.search(r"(?i)Level 1|Practitioner|\bL1\b", ladder_text))
-        has_l2 = bool(re.search(r"(?i)Level 2|Maintainer|\bL2\b", ladder_text))
-
-        if not has_l0:
-            errors.append("The Ladder must include Level 0 (Kitchen-table level with zero jargon)")
-        if not has_l1:
-            errors.append("The Ladder must include Level 1 (Practitioner level with code mechanisms and trade-offs)")
-        if not has_l2:
-            errors.append("The Ladder must include Level 2 (Maintainer level with failure modes and scale ceilings)")
-
         bullets = [line for line in ladder_text.splitlines() if re.match(r"^\s*[-*]\s+", line)]
-        if len(bullets) != 3:
-            errors.append(f"The Ladder must have exactly 3 rungs (found {len(bullets)} bullets).")
+
+        if len(bullets) == 1:
+            has_recognized_role = bool(re.search(
+                r"(?i)\b(?:Vibe[- ]Coder|Junior[- ]Dev|Senior[- ]Dev|Practitioner|Maintainer|Kitchen[- ]Table|Level\s+[012]|L[012])\b",
+                bullets[0]
+            ))
+            if not has_recognized_role:
+                errors.append(
+                    "Targeted single rung in The Ladder must specify a recognized audience level "
+                    "(e.g. 'Level (Vibe Coder)', 'Level (Junior Dev)', or 'Level (Senior Dev)')."
+                )
+        elif len(bullets) == 3:
+            has_l0 = bool(re.search(r"(?i)Level 0|Kitchen[- ]Table|\bL0\b|Vibe[- ]Coder", ladder_text))
+            has_l1 = bool(re.search(r"(?i)Level 1|Practitioner|\bL1\b|Junior[- ]Dev", ladder_text))
+            has_l2 = bool(re.search(r"(?i)Level 2|Maintainer|\bL2\b|Senior[- ]Dev", ladder_text))
+
+            if not has_l0:
+                errors.append("The Ladder must include Level 0 (Kitchen-table level with zero jargon)")
+            if not has_l1:
+                errors.append("The Ladder must include Level 1 (Practitioner level with code mechanisms and trade-offs)")
+            if not has_l2:
+                errors.append("The Ladder must include Level 2 (Maintainer level with failure modes and scale ceilings)")
+        else:
+            errors.append(
+                f"The Ladder must have either 1 targeted rung for the chosen audience or exactly 3 rungs for the full ladder (found {len(bullets)} bullets)."
+            )
 
     passed = len(errors) == 0
     return {
