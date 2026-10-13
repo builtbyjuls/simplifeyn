@@ -306,6 +306,18 @@ class TestSkillStructure(unittest.TestCase):
         self.assertIn("Surface Grounding Respected", content, "SKILL.md must include Surface Grounding Respected in audit checklist")
         self.assertIn("Headless Backend", content, "SKILL.md must document headless backend surface guidance")
 
+    def test_danger_zone_stopping_condition_documented(self):
+        with open(self.skill_md, "r", encoding="utf-8") as f:
+            content = f.read()
+        self.assertTrue(
+            any(k in content for k in ["Safe Boundary", "Stopping Condition", "Safe to leave as-is"]),
+            "SKILL.md must document stopping condition or safe boundary in Danger Zone"
+        )
+        self.assertTrue(
+            any(k in content for k in ["Zero Unprompted Backlog", "prompt-stacking loop", "unprompted feature"]),
+            "SKILL.md must forbid unprompted feature backlogs in Danger Zone"
+        )
+
 if __name__ == "__main__":
     unittest.main()
 

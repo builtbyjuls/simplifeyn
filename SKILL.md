@@ -115,7 +115,7 @@ This skill is called Simplifeyn: it must simplify, not generate an essay. Follow
    - The Picture & Where the Picture Breaks: 1 to 2 sentences total, accompanied by a compact 2-5 line ASCII mechanism flow diagram (`[ Input ] ---> [ Guard ] ---> [ Output ]`).
    - The Ladder: 1 targeted single-line rung for active audience (default vibe-coder: `- **Level (Vibe Coder):** ...`), or exactly 3 rungs if full ladder mode is requested (--full). Do NOT output 3 rungs unless --full is requested.
    - The Screen Test / The Ice-Water Test: Exactly 1 physical sensory action (1 sentence; in-browser/preview if Web UI exists, or 1-line curl/command/log check if headless).
-   - The Danger Zone / Where the Machine Snaps: Exactly 1-2 sentences naming boundary limits / prompt-safety instructions.
+   - The Danger Zone / Where the Machine Snaps: Exactly 1-2 sentences naming boundary limits and stopping conditions (safe boundary or protective guardrail; zero unprompted feature tasks).
    - What Was Left Out: Exactly 1 line.
 
 ---
@@ -171,8 +171,11 @@ State exactly 1 sensory action the user can take right now to observe the mechan
 ### 5. The Danger Zone (Prompt Safety) (or Where the Machine Snaps)
 State the physical boundary limit or failure condition:
 - **For Vibe Coders (Default):** Use heading `### 5. The Danger Zone (Prompt Safety)`:
-  - `- What Can Break:` Name the real-world product or user consequence in plain English (e.g. charging customers twice, hanging on dead servers, surprise bills). Zero abstract terms like "non-idempotent mutations".
-  - `- Next Prompt:` Provide the exact, copy-pasteable prompt to tell the AI next so it doesn't break the feature in the next turn.
+  - `- What Can Break:` Name the real-world product or system failure consequence in plain English (e.g. charging customers twice, hanging on dead servers, fluttering sensors flooding the alerts table). Zero abstract engineering terms.
+  - **Stopping Condition vs. Guardrail:**
+    - If the implementation is complete and safe for current scale: state `- Safe Boundary: Safe to leave as-is for normal traffic. No further prompt needed.`
+    - If future prompts could easily regress this: state `- Guardrail (If Prompting Next): [protective constraint to mention if the user ever modifies this area in future turns]`.
+    - **CRITICAL - Zero Unprompted Backlog:** Never prescribe a new feature or task as a mandatory next step. Never force an infinite prompt-stacking loop by telling the user what feature to build next.
 - **For Junior & Senior Devs:** Use heading `### 5. Where the Machine Snaps` -- state the exact code mechanism limit in 1 sentence (concurrency race, memory ceiling, unindexed database bottleneck, missing idempotency keys).
 
 ### 6. What Was Left Out
@@ -236,7 +239,7 @@ Whenever you complete a feature implementation, bug fix, or significant code mod
 2. The Tangible Picture: One mechanical analogy and where the picture breaks, with an ASCII mechanism flow diagram (1-2 sentences).
 3. The Ladder: 1 targeted single-line rung for active audience (default vibe-coder: Level (Vibe Coder)) or all 3 progressive rungs if requested with --full (Level 0 -> Level 1 -> Level 2).
 4. The Screen Test (or The Ice-Water Test for dev audiences): 1 physical action in browser/preview or terminal to observe the mechanism (1 sentence).
-5. The Danger Zone (Prompt Safety) (or Where the Machine Snaps for dev audiences): What Can Break and Next Prompt to keep AI on rails (1-2 sentences).
+5. The Danger Zone (Prompt Safety) (or Where the Machine Snaps for dev audiences): What Can Break and Safe Boundary / Guardrail (1-2 sentences).
 6. What Was Left Out: Deferred concerns and assumptions (1 line).
 7. Lens Footer: Suggest alternative lenses.
 If the change is trivial (pure docs, lockfiles, formatting), output a 1-line note and append:
