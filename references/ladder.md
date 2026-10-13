@@ -21,6 +21,10 @@ When switching audience via `/simplifeyn for junior-dev` or `/simplifeyn for sen
 - `- **Level (Junior Dev):** <1 sentence on code symbols, signatures, and patterns>`
 - `- **Level (Senior Dev):** <1 sentence on invariants, concurrency, and scale limits>`
 
+### Invariant Preservation Across Audience Switches
+
+Switching the ladder level (`for <audience>` or `/simplifeyn ladder <role>`) changes only the pedagogical perspective and technical vocabulary. It does not alter the underlying physical delta in Section 1 or the deferred scope in Section 6.
+
 ### Full Ladder (`/simplifeyn --full`)
 
 When full ladder mode is requested, all three rungs are presented in progressive order:

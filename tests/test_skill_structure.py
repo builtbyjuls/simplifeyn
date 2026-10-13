@@ -318,6 +318,31 @@ class TestSkillStructure(unittest.TestCase):
             "SKILL.md must forbid unprompted feature backlogs in Danger Zone"
         )
 
+    def test_invariant_anchoring_protocol_documented(self):
+        with open(self.skill_md, "r", encoding="utf-8") as f:
+            content = f.read()
+        self.assertIn("Invariant Anchoring", content, "SKILL.md must document Invariant Anchoring Protocol")
+        self.assertIn("same commit", content.lower(), "SKILL.md must mention same commit re-invocations")
+        self.assertTrue(
+            any(k in content.lower() for k in ["anchor to the previous debrief", "anchor to the prior debrief", "anchor to prior debrief"]),
+            "SKILL.md must instruct anchoring to prior debrief"
+        )
+
+        with open(self.readme_md, "r", encoding="utf-8") as f:
+            readme_content = f.read()
+        self.assertIn("Invariant Anchoring", readme_content, "README.md must document Invariant Anchoring Protocol")
+
+    def test_targeted_micro_commands_documented(self):
+        with open(self.skill_md, "r", encoding="utf-8") as f:
+            content = f.read()
+        self.assertIn("/simplifeyn theme", content, "SKILL.md must document targeted micro-command '/simplifeyn theme <theme>'")
+        self.assertIn("/simplifeyn ladder", content, "SKILL.md must document targeted micro-command '/simplifeyn ladder <role>'")
+
+        with open(self.readme_md, "r", encoding="utf-8") as f:
+            readme_content = f.read()
+        self.assertIn("/simplifeyn theme", readme_content, "README.md must document '/simplifeyn theme <theme>'")
+        self.assertIn("/simplifeyn ladder", readme_content, "README.md must document '/simplifeyn ladder <role>'")
+
 if __name__ == "__main__":
     unittest.main()
 

@@ -46,6 +46,9 @@ This skill supports both one-shot commands and persistent session toggling:
    - Also supported with persistence: `/simplifeyn on as <theme>` (or `/simplifeyn on --as=<theme>`).
 7. **One-Turn Skip (`/simplifeyn skip` or `--no-debrief`):**
    - Suppress the debrief for the current turn without disabling persistent session mode.
+8. **Targeted Micro-Commands (`/simplifeyn theme <theme>` and `/simplifeyn ladder <role>`):**
+   - `/simplifeyn theme <theme>`: Generate and output ONLY Section 2 (The Tangible Picture & ASCII diagram) for the specified theme without repeating invariant sections.
+   - `/simplifeyn ladder <role>`: Generate and output ONLY Section 3 (The Ladder) targeted rung for the specified role (vibe-coder, junior-dev, senior-dev, or --full).
 
 ## Persistence Rules
 
@@ -207,6 +210,24 @@ Users can select a preferred physical domain using `--as=<theme>` or `/simplifey
 2. **Poor Fit / Distortion:** If the requested lens would obscure the code or require misleading mental acrobatics, **do not fake it**.
 3. **The Fallback Note:** State the reason honestly in 1 line and fall back to the accurate domain:
    *`Note on lens: A '<theme>' analogy distorts <concept>; falling back to '<accurate-theme>' (<objects>) for honest mechanics.`*
+
+---
+
+## Invariant Anchoring Protocol (Same Commit Preservation)
+
+When the user re-invokes `/simplifeyn` on the **same commit** with a different lens or theme (e.g. `/simplifeyn as transit` after `/simplifeyn for junior-dev`), prevent semantic drift across factual sections:
+
+1. **Anchor to the Prior Debrief:**
+   - Anchor to the previous debrief in the active conversation history.
+   - Do NOT re-analyze the commit from scratch or invent new wording for sections that are immutable facts of the code change.
+2. **Commit Invariants (Frozen Sections):**
+   - **Section 1 (In One Sentence):** The physical delta is an immutable fact of the commit. Keep it identical to the prior debrief.
+   - **Section 4 (The Screen Test / The Ice-Water Test):** The physical verification action is grounded in the codebase and does not change when changing metaphor.
+   - **Section 5 (The Danger Zone / Where the Machine Snaps):** The code stress boundary or safe limit does not change when changing metaphor.
+   - **Section 6 (What Was Left Out):** The deferred architectural scope is an immutable fact of the commit. Keep it identical to the prior debrief.
+3. **Variant Sections (What Changes):**
+   - **Theme Switch (`as <theme>` or `/simplifeyn theme <theme>`):** ONLY regenerate Section 2 (The Tangible Picture & ASCII diagram). Keep Section 1, 4, 5, and 6 word-for-word identical to the prior debrief.
+   - **Audience Switch (`for <role>` or `/simplifeyn ladder <role>`):** ONLY swap Section 3 (The Ladder), while re-framing Section 4 and 5 in that role's vocabulary. Keep Section 1 and Section 6 identical.
 
 ---
 

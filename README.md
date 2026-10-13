@@ -193,7 +193,27 @@ Direct the debrief toward a specific physical domain (`kitchen`, `warehouse`, `w
 
 If a requested lens fundamentally distorts the code mechanism, Simplifeyn enforces Feynman honesty: it outputs a 1-line disclaimer and falls back to the accurate domain.
 
-### Mode 4: One-Shot Command
+### Invariant Anchoring Protocol (Same Commit Preservation)
+
+When re-invoking `/simplifeyn` on the same commit with a different lens or theme (e.g. `/simplifeyn as transit` after `/simplifeyn for junior-dev`), Simplifeyn anchors to the prior debrief in conversation history to prevent semantic drift:
+* **Frozen Invariants:** Section 1 (In One Sentence), Section 4 (Verification Test), Section 5 (Failure Limit), and Section 6 (What Was Left Out) remain immutable facts of the commit.
+* **Variant Swap:** Switching theme (`as <theme>`) regenerates *only* Section 2 (The Tangible Picture & ASCII diagram). Switching audience (`for <audience>`) swaps *only* Section 3 (The Ladder) while re-framing Section 4 and 5 in that role's vocabulary.
+
+### Mode 4: Targeted Micro-Commands
+
+Inspect or swap individual sections without re-running the entire 6-section debrief:
+
+```bash
+# Output only a new Tangible Picture & ASCII diagram for a specific theme:
+/simplifeyn theme transit
+/simplifeyn theme warehouse
+
+# Output only the targeted ladder rung for a specific audience:
+/simplifeyn ladder junior-dev
+/simplifeyn ladder senior-dev
+```
+
+### Mode 5: One-Shot Command
 
 Run once for the latest change or a specific commit without enabling session persistence:
 
@@ -206,7 +226,7 @@ Run once for the latest change or a specific commit without enabling session per
 Or ask the agent in plain language:
 > *"Explain what you just implemented using the Feynman technique."*
 
-### Mode 5: Always-On Project Rule
+### Mode 6: Always-On Project Rule
 
 If you want your agent to conclude **every** feature implementation or bug fix with a Feynman Debrief automatically across the whole repo, add this block to your project's `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`:
 
