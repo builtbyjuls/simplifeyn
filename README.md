@@ -58,7 +58,15 @@ Richard Feynman's approach to science and engineering rested on two immutable fo
 
 ## Installation
 
-### Quick Install (One-Liner)
+### Via `skills.sh` Ecosystem (Recommended)
+
+Install directly using the open Agent Skills ecosystem installer (`skills.sh`):
+
+```bash
+npx skills add builtbyjuls/simplifeyn
+```
+
+### Quick Shell Install
 
 Install directly to your coding assistant with zero cloning:
 

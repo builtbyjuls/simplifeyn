@@ -197,6 +197,13 @@ class TestSkillStructure(unittest.TestCase):
         self.assertIn("Complexity Gating", content, "README.md must document Complexity Gating")
         self.assertIn("/simplifeyn skip", content, "README.md must document '/simplifeyn skip'")
 
+    def test_skills_sh_installation_documented(self):
+        with open(self.readme_md, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("npx skills add builtbyjuls/simplifeyn", content, "README.md must document 'npx skills add builtbyjuls/simplifeyn'")
+        self.assertIn("skills.sh", content.lower(), "README.md must reference skills.sh ecosystem")
+
     def test_always_on_rule_synchronized(self):
         with open(self.skill_md, "r", encoding="utf-8") as f:
             skill_content = f.read()
