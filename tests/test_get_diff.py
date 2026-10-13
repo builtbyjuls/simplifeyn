@@ -90,5 +90,74 @@ class TestGetDiff(unittest.TestCase):
             if os.path.exists(hostile_file):
                 os.remove(hostile_file)
 
+    def test_project_surface_detection_headless(self):
+        # Create pom.xml without any UI files
+        pom_path = os.path.join(self.temp_repo, "pom.xml")
+        with open(pom_path, "w", encoding="utf-8") as f:
+            f.write("<project></project>\n")
+        subprocess.run(["git", "add", "pom.xml"], cwd=self.temp_repo, check=True)
+        subprocess.run(["git", "commit", "-m", "feat: backend"], cwd=self.temp_repo, check=True, capture_output=True)
+
+        proc = subprocess.run([self.script], cwd=self.temp_repo, capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("Project Context", proc.stdout)
+        self.assertIn("Surface: Headless Backend", proc.stdout)
+
+    def test_project_surface_detection_web_ui(self):
+        # Create package.json with react or an index.html
+        html_path = os.path.join(self.temp_repo, "index.html")
+        with open(html_path, "w", encoding="utf-8") as f:
+            f.write("<html><body>App</body></html>\n")
+        subprocess.run(["git", "add", "index.html"], cwd=self.temp_repo, check=True)
+        subprocess.run(["git", "commit", "-m", "feat: frontend"], cwd=self.temp_repo, check=True, capture_output=True)
+
+        proc = subprocess.run([self.script], cwd=self.temp_repo, capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("Project Context", proc.stdout)
+        self.assertIn("Surface: Web/UI App", proc.stdout)
+
+    def test_project_surface_python_with_app_dir_is_headless(self):
+        # Python project with app/ directory (e.g. FastAPI / Flask) should be Headless Backend
+        app_dir = os.path.join(self.temp_repo, "app")
+        os.makedirs(app_dir, exist_ok=True)
+        with open(os.path.join(app_dir, "main.py"), "w", encoding="utf-8") as f:
+            f.write("# FastAPI entrypoint\n")
+        with open(os.path.join(self.temp_repo, "pyproject.toml"), "w", encoding="utf-8") as f:
+            f.write("[project]\nname = 'api'\n")
+        subprocess.run(["git", "add", "."], cwd=self.temp_repo, check=True)
+        subprocess.run(["git", "commit", "-m", "feat: python api"], cwd=self.temp_repo, check=True, capture_output=True)
+
+        proc = subprocess.run([self.script], cwd=self.temp_repo, capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("Surface: Headless Backend", proc.stdout)
+        self.assertNotIn("Web/UI App", proc.stdout)
+
+    def test_project_surface_cli_tool(self):
+        bin_dir = os.path.join(self.temp_repo, "bin")
+        os.makedirs(bin_dir, exist_ok=True)
+        with open(os.path.join(bin_dir, "mytool"), "w", encoding="utf-8") as f:
+            f.write("#!/bin/sh\n")
+        subprocess.run(["git", "add", "."], cwd=self.temp_repo, check=True)
+        subprocess.run(["git", "commit", "-m", "feat: cli tool"], cwd=self.temp_repo, check=True, capture_output=True)
+
+        proc = subprocess.run([self.script], cwd=self.temp_repo, capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("Surface: CLI Tool", proc.stdout)
+
+    def test_project_surface_project_memory_deferred_note(self):
+        # Create backend and project memory file noting UI is deferred
+        pom_path = os.path.join(self.temp_repo, "pom.xml")
+        with open(pom_path, "w", encoding="utf-8") as f:
+            f.write("<project></project>\n")
+        claude_path = os.path.join(self.temp_repo, "CLAUDE.md")
+        with open(claude_path, "w", encoding="utf-8") as f:
+            f.write("# Guidelines\n- Defer real-time streaming dashboard to Phase 2\n")
+        subprocess.run(["git", "add", "."], cwd=self.temp_repo, check=True)
+        subprocess.run(["git", "commit", "-m", "docs: claude rules"], cwd=self.temp_repo, check=True, capture_output=True)
+
+        proc = subprocess.run([self.script], cwd=self.temp_repo, capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("Note: UI/dashboards marked as deferred in project memory", proc.stdout)
+
 if __name__ == "__main__":
     unittest.main()

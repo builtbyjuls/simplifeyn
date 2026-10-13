@@ -57,3 +57,11 @@ In his 1974 Caltech address *Cargo Cult Science*, Feynman described South Sea is
 * **The Trap:** Pretending a code change works unconditionally, concealing the exact physical breaking threshold from the developer.
 * [BAD]: *"This rate limiter protects downstream microservices from getting overloaded."*
 * [FEYNMAN FIX]: *"This holds a token bucket in process memory; it protects single instances up to 500 req/s, but snaps if the server restarts or if you run multiple instances behind a load balancer without Redis sharing."*
+
+---
+
+### Failure Mode 8: The Phantom UI (Hallucinating Interfaces on Headless Code)
+
+* **The Trap:** Hallucinating browser previews, upload dashboards, or clickable buttons when the project is a headless backend, daemon, or CLI tool.
+* [BAD]: *"Upload a test reading above 253 volts, and watch an alert banner appear on the overview dashboard."*
+* [FEYNMAN FIX]: *"Send a test payload via `curl -X POST http://localhost:8080/readings -d '{\"voltage\": 260}'` and check the application log for the warning alert entry."*

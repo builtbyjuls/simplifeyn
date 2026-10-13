@@ -293,6 +293,19 @@ class TestSkillStructure(unittest.TestCase):
             readme_content = f.read()
         self.assertIn("for junior-dev as gaming", readme_content, "README.md must document combined audience and theme lens")
 
+    def test_failure_modes_includes_phantom_ui(self):
+        fm_path = os.path.join(BASE_DIR, "references", "failure-modes.md")
+        with open(fm_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        self.assertIn("Failure Mode 8", content, "failure-modes.md must include Failure Mode 8")
+        self.assertIn("Phantom UI", content, "failure-modes.md must describe The Phantom UI failure mode")
+
+    def test_surface_grounding_documented(self):
+        with open(self.skill_md, "r", encoding="utf-8") as f:
+            content = f.read()
+        self.assertIn("Surface Grounding Respected", content, "SKILL.md must include Surface Grounding Respected in audit checklist")
+        self.assertIn("Headless Backend", content, "SKILL.md must document headless backend surface guidance")
+
 if __name__ == "__main__":
     unittest.main()
 

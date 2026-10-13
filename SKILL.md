@@ -88,8 +88,9 @@ Always produce a full Feynman debrief when:
 
 ## The Workflow
 
-1. **Inspect the Diff:**
-   Run `git diff` (e.g. `git diff HEAD~1` or `git diff --cached`) directly in the project repository as the primary method. If `simplifeyn` is installed or cloned, you can alternatively locate and execute `get-diff.sh` (e.g. `$(find ~/.gemini/config/skills ~/.gemini/skills ~/.claude/skills ~/.agents/skills -name get-diff.sh 2>/dev/null | head -n1)` or `<skill-dir>/scripts/get-diff.sh`).
+1. **Inspect the Diff & Project Surface:**
+   Run `git diff` (e.g. `git diff HEAD~1` or `git diff --cached`) directly in the project repository as the primary method. If `simplifeyn` is installed or cloned, you can alternatively locate and execute `get-diff.sh` (e.g. `$(find ~/.gemini/config/skills ~/.gemini/skills ~/.claude/skills ~/.agents/skills -name get-diff.sh 2>/dev/null | head -n1)` or `<skill-dir>/scripts/get-diff.sh`), which prints `=== Project Context ===` (detecting whether the project has a Web/UI App, Headless Backend, CLI Tool, etc.).
+   **Ground Against Project Memory:** Always check project memory and rules files (`AGENTS.md`, `GEMINI.md`, `CLAUDE.md`) if present. If project memory explicitly notes that certain surfaces (like dashboards, UI, streaming frontends) are deferred, or if the project surface indicates a headless backend or CLI without a UI, NEVER hallucinate phantom dashboards, browser previews, or upload buttons. Ground all verification actions in the actual system surface.
 2. **Isolate the Causal Mechanism:**
    Ask: *If electricity and bits were physical water or gears, what physically moved differently before vs. after this change?*
 3. **Format the Response:**
@@ -113,7 +114,7 @@ This skill is called Simplifeyn: it must simplify, not generate an essay. Follow
    - In One Sentence: Exactly 1 sentence.
    - The Picture & Where the Picture Breaks: 1 to 2 sentences total, accompanied by a compact 2-5 line ASCII mechanism flow diagram (`[ Input ] ---> [ Guard ] ---> [ Output ]`).
    - The Ladder: 1 targeted single-line rung for active audience (default vibe-coder: `- **Level (Vibe Coder):** ...`), or exactly 3 rungs if full ladder mode is requested (--full). Do NOT output 3 rungs unless --full is requested.
-   - The Screen Test / The Ice-Water Test: Exactly 1 physical sensory action (1 sentence).
+   - The Screen Test / The Ice-Water Test: Exactly 1 physical sensory action (1 sentence; in-browser/preview if Web UI exists, or 1-line curl/command/log check if headless).
    - The Danger Zone / Where the Machine Snaps: Exactly 1-2 sentences naming boundary limits / prompt-safety instructions.
    - What Was Left Out: Exactly 1 line.
 
@@ -162,7 +163,9 @@ If full ladder mode is requested (`/simplifeyn --full`), provide all 3 progressi
 
 ### 4. The Screen Test (or The Ice-Water Test)
 State exactly 1 sensory action the user can take right now to observe the mechanism in action:
-- **For Vibe Coders (Default):** Use heading `### 4. The Screen Test` -- a tangible, no-code action in the app preview or browser (e.g. toggle Wi-Fi, click a preview button, observe visual loading countdown) rather than terminal commands or DevTools panels.
+- **For Vibe Coders (Default):**
+  - **When Web UI exists:** Use heading `### 4. The Screen Test` -- a tangible, no-code action in the app preview or browser (e.g. toggle Wi-Fi, click a preview button, observe visual loading countdown) rather than terminal commands or DevTools panels.
+  - **When Headless Backend / API / CLI (No UI):** Use heading `### 4. The Ice-Water Test` (or `### 4. The Screen Test` without phantom UI) -- provide a concrete 1-line command or verification action (e.g. run a 1-line `curl` command with sample payload, trigger a CLI command, or check application output logs). **Zero hallucinated dashboards, preview forms, or browser buttons.** Ground the verification entirely in the actual project surface and respect deferred boundaries in project memory.
 - **For Junior & Senior Devs:** Use heading `### 4. The Ice-Water Test` -- a direct DevTools, curl, or test execution command.
 
 ### 5. The Danger Zone (Prompt Safety) (or Where the Machine Snaps)
@@ -215,6 +218,7 @@ Before outputting the debrief, prune and verify against [failure-modes.md](./ref
 - [ ] **ASCII Mechanism Flow:** Contains a fenced pure-ASCII flow mapping physical analogy objects in `[ ]` to code mechanisms in `( )` underneath.
 - [ ] **Calibrated Ladder Included:** Contains either 1 targeted single-line rung for the active audience level (Vibe Coder, Junior Dev, Senior Dev) or all 3 rungs for full ladder mode.
 - [ ] **Analogy Limits Named:** States the exact boundary where the mental model breaks.
+- [ ] **Surface Grounding Respected:** Verification action matches the real project surface (browser preview for Web UI; curl, CLI command, or log check for headless backends/APIs). Zero hallucinated UI dashboards or phantom buttons.
 - [ ] **The Ice-Water Test Included:** Contains exactly 1 physical action in the browser, terminal, or DevTools to observe the mechanism in action.
 - [ ] **Where the Machine Snaps Included:** Identifies the exact code failure boundary under load, concurrency, or subsequent modifications.
 - [ ] **The "Planes Don't Land" Test:** Does the change solve the actual causal problem, or is it just defensive scaffolding?
