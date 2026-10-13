@@ -199,12 +199,28 @@ class TestSkillStructure(unittest.TestCase):
         self.assertNotIn("two minutes", t_content, "01-retry-backoff-gemini-3.8-flash.md must not use minutes for second-scale retry pauses")
         self.assertIn("two seconds, then four", t_content, "01-retry-backoff-gemini-3.8-flash.md must use seconds for retry pauses")
 
+        sonnet_path = os.path.join(assets_dir, "transcripts", "01-retry-backoff-claude-sonnet-5.5.md")
+        self.assertTrue(os.path.isfile(sonnet_path), "assets/transcripts/01-retry-backoff-claude-sonnet-5.5.md must exist")
+        with open(sonnet_path, "r", encoding="utf-8") as f:
+            s_content = f.read()
+        self.assertIn("Claude Sonnet 5.5", s_content, "01-retry-backoff-claude-sonnet-5.5.md must specify Claude Sonnet 5.5 model")
+        self.assertNotIn("agy", s_content, "01-retry-backoff-claude-sonnet-5.5.md must not mention agy")
+
+        opus_path = os.path.join(assets_dir, "transcripts", "01-retry-backoff-claude-opus-5.5.md")
+        self.assertTrue(os.path.isfile(opus_path), "assets/transcripts/01-retry-backoff-claude-opus-5.5.md must exist")
+        with open(opus_path, "r", encoding="utf-8") as f:
+            o_content = f.read()
+        self.assertIn("Claude Opus 5.5", o_content, "01-retry-backoff-claude-opus-5.5.md must specify Claude Opus 5.5 model")
+        self.assertNotIn("agy", o_content, "01-retry-backoff-claude-opus-5.5.md must not mention agy")
+
         transcripts_readme = os.path.join(assets_dir, "transcripts", "README.md")
         self.assertTrue(os.path.isfile(transcripts_readme), "assets/transcripts/README.md must exist")
         with open(transcripts_readme, "r", encoding="utf-8") as f:
             readme_content = f.read()
         self.assertIn("File Naming Convention", readme_content, "assets/transcripts/README.md must document naming convention")
-        self.assertIn("01-retry-backoff-gemini-3.8-flash.md", readme_content, "assets/transcripts/README.md must document model-specific file pattern")
+        self.assertIn("01-retry-backoff-gemini-3.8-flash.md", readme_content, "assets/transcripts/README.md must document Gemini fixture")
+        self.assertIn("01-retry-backoff-claude-sonnet-5.5.md", readme_content, "assets/transcripts/README.md must document Claude Sonnet fixture")
+        self.assertIn("01-retry-backoff-claude-opus-5.5.md", readme_content, "assets/transcripts/README.md must document Claude Opus fixture")
 
         scripts_dir = os.path.join(BASE_DIR, "scripts")
         self.assertTrue(os.path.isdir(scripts_dir), "scripts/ directory must exist")

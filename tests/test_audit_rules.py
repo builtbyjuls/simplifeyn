@@ -267,25 +267,32 @@ class TestAuditDebrief(unittest.TestCase):
 
     def test_transcript_01_retry_backoff_passes_audit(self):
         import audit_debrief
-        transcript_path = os.path.join(BASE_DIR, "assets", "transcripts", "01-retry-backoff-gemini-3.8-flash.md")
-        with open(transcript_path, "r", encoding="utf-8") as f:
-            content = f.read()
-
+        transcripts = [
+            "01-retry-backoff-gemini-3.8-flash.md",
+            "01-retry-backoff-claude-sonnet-5.5.md",
+            "01-retry-backoff-claude-opus-5.5.md",
+        ]
         level_markers = [
             "## 3. Simplifeyn Output: Level (Vibe Coder - Default)",
             "## 4. Simplifeyn Output: Level (Junior Dev with Gaming Lens)",
             "## 5. Simplifeyn Output: Level (Senior Dev with Transit Lens)",
             "## 6. Simplifeyn Output: Full 3-Rung Ladder (--full)",
         ]
-        for marker in level_markers:
-            self.assertIn(marker, content, f"Transcript 01 must contain section '{marker}'")
-            section = content.split(marker, 1)[1].split("\n---\n")[0].strip()
-            if "> **Prompt:**" in section:
-                section = section.split("\n\n", 1)[1].strip()
-            if "\n### Audit Verification" in section:
-                section = section.split("\n### Audit Verification")[0].strip()
-            result = audit_debrief.audit_text(section)
-            self.assertTrue(result["passed"], f"Transcript section '{marker}' must pass audit: {result.get('errors')}")
+        for tf in transcripts:
+            transcript_path = os.path.join(BASE_DIR, "assets", "transcripts", tf)
+            self.assertTrue(os.path.isfile(transcript_path), f"Transcript fixture '{tf}' must exist")
+            with open(transcript_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            for marker in level_markers:
+                self.assertIn(marker, content, f"Transcript '{tf}' must contain section '{marker}'")
+                section = content.split(marker, 1)[1].split("\n---\n")[0].strip()
+                if "> **Prompt:**" in section:
+                    section = section.split("\n\n", 1)[1].strip()
+                if "\n### Audit Verification" in section:
+                    section = section.split("\n### Audit Verification")[0].strip()
+                result = audit_debrief.audit_text(section)
+                self.assertTrue(result["passed"], f"Transcript '{tf}' section '{marker}' must pass audit: {result.get('errors')}")
 
     def test_worked_example_contains_skipped_scenario(self):
         worked_examples_path = os.path.join(BASE_DIR, "assets", "worked-examples.md")
