@@ -191,6 +191,20 @@ class TestSkillStructure(unittest.TestCase):
         assets_dir = os.path.join(BASE_DIR, "assets")
         self.assertTrue(os.path.isdir(assets_dir), "assets/ directory must exist")
         self.assertTrue(os.path.isfile(os.path.join(assets_dir, "worked-examples.md")), "assets/worked-examples.md must exist")
+        transcript_path = os.path.join(assets_dir, "transcripts", "01-retry-backoff-gemini-3.8-flash.md")
+        self.assertTrue(os.path.isfile(transcript_path), "assets/transcripts/01-retry-backoff-gemini-3.8-flash.md must exist")
+        with open(transcript_path, "r", encoding="utf-8") as f:
+            t_content = f.read()
+        self.assertIn("Gemini 3.8 Flash", t_content, "01-retry-backoff-gemini-3.8-flash.md must specify Gemini 3.8 Flash model")
+        self.assertNotIn("two minutes", t_content, "01-retry-backoff-gemini-3.8-flash.md must not use minutes for second-scale retry pauses")
+        self.assertIn("two seconds, then four", t_content, "01-retry-backoff-gemini-3.8-flash.md must use seconds for retry pauses")
+
+        transcripts_readme = os.path.join(assets_dir, "transcripts", "README.md")
+        self.assertTrue(os.path.isfile(transcripts_readme), "assets/transcripts/README.md must exist")
+        with open(transcripts_readme, "r", encoding="utf-8") as f:
+            readme_content = f.read()
+        self.assertIn("File Naming Convention", readme_content, "assets/transcripts/README.md must document naming convention")
+        self.assertIn("01-retry-backoff-gemini-3.8-flash.md", readme_content, "assets/transcripts/README.md must document model-specific file pattern")
 
         scripts_dir = os.path.join(BASE_DIR, "scripts")
         self.assertTrue(os.path.isdir(scripts_dir), "scripts/ directory must exist")
