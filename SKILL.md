@@ -91,7 +91,8 @@ Always produce a full Feynman debrief when:
 3. **Format the Response:**
    Follow the **Core Debrief Structure** below strictly.
 4. **Run the Pre-Send Audit:**
-   Verify the debrief against the [Quality Audit Checklist](#quality-audit-checklist). When running in CLI or CI environments, execute `python3 scripts/audit_debrief.py` to programmatically validate the debrief.
+   Verify the debrief against the [Quality Audit Checklist](#quality-audit-checklist). When running in CLI or CI environments, execute `python3 scripts/audit_debrief.py` to programmatically validate the debrief format.
+   > **Note on Linter Scope:** The audit script verifies structural sections, word count bounds, banned crutches, and format rules (heuristic form check). It does not evaluate the factual accuracy of domain claims.
 
 ---
 
@@ -99,7 +100,7 @@ Always produce a full Feynman debrief when:
 
 This skill is called Simplifeyn: it must simplify, not generate an essay. Follow these strict bounds:
 
-1. **Hard Word Budget:** Target under 150 words of explanatory prose (excluding markdown headers and fenced ASCII flow blocks; hard ceiling: 220 words total). Must fit in a single terminal viewport without scrolling.
+1. **Hard Word Budget:** Target under 170 words of explanatory prose (excluding markdown headers and fenced ASCII flow blocks; hard ceiling: 250 words total). Must fit in a single terminal viewport without scrolling.
 2. **No Preamble, No Recap, No Closing Pleasantries:**
    - Forbidden openers: "Sure!", "Here is what changed:", "I have implemented...", "Looking at the changes..."
    - Forbidden closers: "Hope this helps!", "Let me know if you need anything else.", "Feel free to ask."
@@ -181,7 +182,7 @@ Users can select a preferred physical domain using `--as=<theme>` or `/simplifey
 
 Before outputting the debrief, prune and verify against [failure-modes.md](./references/failure-modes.md):
 
-- [ ] **Word Budget Respected:** Explanatory prose is under 150 words (excluding diagram block and headings; hard ceiling 220 total words).
+- [ ] **Word Budget Respected:** Explanatory prose is under 170 words (excluding diagram block and headings; hard ceiling 250 total words).
 - [ ] **No Preamble or Pleasantry:** Starts directly with the first section heading; zero chat filler.
 - [ ] **No Banned Buzzwords:** Contains zero instances of hand-waving crutches or empty buzzwords listed in [banned-words.txt](./references/banned-words.txt) (*basically*, *simply*, *just*, *obviously*, *trivial*, *optimized*, *streamlined*, *under the hood*, *seamless*, *self-explanatory*, *abstracted away*).
 - [ ] **Sensory Verbs:** Uses mechanical, physical verbs (*pushes, catches, holds, drops, waits, locks*) rather than corporate hand-waving (*orchestrates, streamlines, optimizes*). See [voice.md](./references/voice.md).
@@ -200,7 +201,7 @@ To enforce Feynman debriefs repository-wide across every session without relying
 
 ```markdown
 ## Post-Implementation Debrief
-Whenever you complete a feature implementation, bug fix, or significant code modification, conclude your response with a lean Feynman Debrief (< 150 words prose, zero conversational preamble):
+Whenever you complete a feature implementation, bug fix, or significant code modification, conclude your response with a lean Feynman Debrief (< 170 words prose, zero conversational preamble):
 1. In One Sentence: The physical delta without buzzwords (1 sentence).
 2. The Tangible Picture: One mechanical analogy and where the picture breaks, with an ASCII mechanism flow diagram (1-2 sentences).
 3. The Ladder: Exactly 3 single-line rungs: Level 0 (zero jargon) -> Level 1 (code & trade-offs) -> Level 2 (failure modes & scale ceilings).

@@ -39,8 +39,8 @@ REQUIRED_SECTIONS = [
     (r"(?i)#{1,3}\s+(?:\d+\.\s+)?(?:What Was )?Left Out", "What Was Left Out"),
 ]
 
-MAX_PROSE_WORDS = 150
-MAX_TOTAL_WORDS = 220
+MAX_PROSE_WORDS = 170
+MAX_TOTAL_WORDS = 250
 
 def audit_text(text: str) -> Dict[str, Any]:
     errors: List[str] = []
@@ -137,17 +137,10 @@ CONFIG_OR_CI_EXTS = {".json", ".yml", ".yaml", ".toml", ".ini", ".env", ".conf"}
 
 
 def check_diff_complexity(diff_text: str, commit_msg: str = "") -> Dict[str, Any]:
-    # 1. Commit message convention heuristic
+    # 1. Behavioral commit message convention heuristic overrides to debrief
     if commit_msg:
         cm_lower = commit_msg.strip().lower()
-        if re.match(r"^(docs|chore|style|ci|build)(\([a-z0-9_-]+\))?:\s*", cm_lower):
-            prefix = cm_lower.split(":")[0]
-            return {
-                "should_debrief": False,
-                "action": "skip",
-                "reason": f"Commit message type '{prefix}' indicates non-behavioral or maintenance change.",
-            }
-        if re.match(r"^(feat|perf|fix|refactor)(\([a-z0-9_-]+\))?:\s*", cm_lower):
+        if re.match(r"^(feat|perf|fix|refactor)(\([a-z0-9_-]+\))?!?:\s*", cm_lower):
             prefix = cm_lower.split(":")[0]
             return {
                 "should_debrief": True,
@@ -203,6 +196,53 @@ def check_diff_complexity(diff_text: str, commit_msg: str = "") -> Dict[str, Any
             "action": "skip",
             "reason": "Diff contains only comments or whitespace changes.",
         }
+
+    # 4. Check for pure package metadata version bumps with chore/style/docs commit prefix
+    manifest_files = {"package.json", "pyproject.toml", "cargo.toml"}
+    if commit_msg:
+        cm_lower = commit_msg.strip().lower()
+        if re.match(r"^(docs|chore|style)(\([a-z0-9_-]+\))?:\s*", cm_lower):
+            prefix = cm_lower.split(":")[0]
+            if files_changed and any(os.path.basename(p).lower() in manifest_files for p in files_changed):
+                all_manifest_or_locks = all(
+                    os.path.basename(p).lower() in manifest_files
+                    or os.path.basename(p).lower() in LOCKFILES_AND_IGNORES
+                    or os.path.basename(p).lower().endswith(".lock")
+                    for p in files_changed
+                )
+                if all_manifest_or_locks:
+                    current_file = ""
+                    manifest_mods_valid = True
+                    for line in diff_text.splitlines():
+                        if line.startswith("diff --git a/"):
+                            parts = line.split()
+                            if len(parts) >= 4:
+                                current_file = parts[-1][2:] if parts[-1].startswith("b/") else parts[-1]
+                        elif line.startswith("+++ b/"):
+                            current_file = line[6:]
+                        elif (line.startswith("+") and not line.startswith("+++")) or (line.startswith("-") and not line.startswith("---")):
+                            if os.path.basename(current_file).lower() in manifest_files:
+                                content = line[1:].strip()
+                                if content and not re.match(r'^(?:"version"|version\s*=)', content):
+                                    manifest_mods_valid = False
+                                    break
+                    if manifest_mods_valid:
+                        return {
+                            "should_debrief": False,
+                            "action": "skip",
+                            "reason": f"Commit prefix '{prefix}' with metadata version bump only.",
+                        }
+
+    # 5. Empty diff with non-behavioral commit message
+    if not diff_text.strip() and commit_msg:
+        cm_lower = commit_msg.strip().lower()
+        if re.match(r"^(docs|chore|style)(\([a-z0-9_-]+\))?:\s*", cm_lower):
+            prefix = cm_lower.split(":")[0]
+            return {
+                "should_debrief": False,
+                "action": "skip",
+                "reason": f"Commit message type '{prefix}' indicates non-behavioral or maintenance change.",
+            }
 
     # For code and config files, do not skip by size; any substantive change triggers debrief
     return {

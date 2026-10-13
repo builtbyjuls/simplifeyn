@@ -197,6 +197,41 @@ class TestSkillStructure(unittest.TestCase):
         self.assertIn("Complexity Gating", content, "README.md must document Complexity Gating")
         self.assertIn("/simplifeyn skip", content, "README.md must document '/simplifeyn skip'")
 
+    def test_always_on_rule_synchronized(self):
+        with open(self.skill_md, "r", encoding="utf-8") as f:
+            skill_content = f.read()
+        with open(self.readme_md, "r", encoding="utf-8") as f:
+            readme_content = f.read()
+
+        self.assertIn("7. Lens Footer", skill_content, "SKILL.md always-on rule must contain 7. Lens Footer")
+        self.assertIn("7. Lens Footer", readme_content, "README.md always-on rule must contain 7. Lens Footer")
+
+    def test_linter_form_only_note_in_skill(self):
+        with open(self.skill_md, "r", encoding="utf-8") as f:
+            skill_content = f.read()
+
+        self.assertTrue(
+            any(k in skill_content.lower() for k in ["form check", "heuristic form", "structural sections", "factual accuracy"]),
+            "SKILL.md must note that the audit linter verifies form/structure, not factual domain accuracy"
+        )
+
+    def test_word_budget_consistency(self):
+        with open(self.skill_md, "r", encoding="utf-8") as f:
+            skill_content = f.read()
+        with open(self.readme_md, "r", encoding="utf-8") as f:
+            readme_content = f.read()
+
+        self.assertIn("170", skill_content, "SKILL.md must state target under 170 prose words")
+        self.assertIn("250", skill_content, "SKILL.md must state hard ceiling of 250 total words")
+        self.assertIn("170", readme_content, "README.md must state target under 170 prose words")
+        self.assertIn("250", readme_content, "README.md must state hard ceiling of 250 total words")
+
+        self.assertNotIn("150 prose words", skill_content, "SKILL.md must not contain stale '150 prose words'")
+        self.assertNotIn("150 prose words", readme_content, "README.md must not contain stale '150 prose words'")
+        self.assertNotIn("220 words", skill_content, "SKILL.md must not contain stale '220 words'")
+        self.assertNotIn("220 words", readme_content, "README.md must not contain stale '220 words'")
+
 if __name__ == "__main__":
     unittest.main()
+
 

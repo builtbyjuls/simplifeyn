@@ -177,7 +177,7 @@ class TestAuditDebrief(unittest.TestCase):
     def test_excessive_verbosity_flagged(self):
         import audit_debrief
 
-        # Generate a verbose text > 150 prose words
+        # Generate a verbose text > 170 prose words
         filler = "The mechanism operates across multiple boundaries and performs tasks repeatedly without pause. " * 25
         verbose_text = (
             "### 1. In One Sentence\n"
@@ -475,7 +475,7 @@ class TestAuditDebrief(unittest.TestCase):
         )
         result = audit_debrief.audit_text(good_text)
         self.assertTrue(result["passed"], f"Well-formed debrief should pass: {result.get('errors')}")
-        self.assertLessEqual(result.get("prose_word_count", 999), 150)
+        self.assertLessEqual(result.get("prose_word_count", 999), 170)
 
     def test_diff_complexity_docs_only_skipped(self):
         import audit_debrief
@@ -536,6 +536,137 @@ class TestAuditDebrief(unittest.TestCase):
 
         res_feat = audit_debrief.check_diff_complexity(diff, commit_msg="feat(worker): introduce background queue")
         self.assertTrue(res_feat["should_debrief"])
+
+    def test_chore_commit_prefix_with_code_logic_change_triggers_debrief(self):
+        import audit_debrief
+        diff = (
+            "diff --git a/src/client.py b/src/client.py\n"
+            "--- a/src/client.py\n"
+            "+++ b/src/client.py\n"
+            "@@ -5,1 +5,1 @@\n"
+            "-timeout = 30\n"
+            "+timeout = 0\n"
+        )
+        res = audit_debrief.check_diff_complexity(diff, commit_msg="chore: tweak timeout")
+        self.assertTrue(res["should_debrief"], "Code logic change in a chore: commit must trigger debrief")
+        self.assertEqual(res["action"], "debrief")
+
+    def test_ci_commit_prefix_with_ci_config_change_triggers_debrief(self):
+        import audit_debrief
+        diff = (
+            "diff --git a/.github/workflows/deploy.yml b/.github/workflows/deploy.yml\n"
+            "--- a/.github/workflows/deploy.yml\n"
+            "+++ b/.github/workflows/deploy.yml\n"
+            "@@ -10,1 +10,1 @@\n"
+            "-run: ./test.sh && ./deploy.sh\n"
+            "+run: ./deploy.sh\n"
+        )
+        res = audit_debrief.check_diff_complexity(diff, commit_msg="ci: deploy script update")
+        self.assertTrue(res["should_debrief"], "Dropping test in CI yml under ci: prefix must trigger debrief")
+        self.assertEqual(res["action"], "debrief")
+
+    def test_chore_version_bump_with_lockfile_skips(self):
+        import audit_debrief
+        diff = (
+            "diff --git a/package.json b/package.json\n"
+            "--- a/package.json\n"
+            "+++ b/package.json\n"
+            '@@ -3,1 +3,1 @@\n'
+            '-  "version": "1.0.0",\n'
+            '+  "version": "1.0.1",\n'
+            "diff --git a/package-lock.json b/package-lock.json\n"
+            "--- a/package-lock.json\n"
+            "+++ b/package-lock.json\n"
+            '@@ -3,1 +3,1 @@\n'
+            '-  "version": "1.0.0",\n'
+            '+  "version": "1.0.1",\n'
+        )
+        res = audit_debrief.check_diff_complexity(diff, commit_msg="chore: bump version to 1.0.1")
+        self.assertFalse(res["should_debrief"], "chore: bump version touching package.json and lockfile must skip")
+        self.assertEqual(res["action"], "skip")
+
+    def test_feat_breaking_change_exclamation_triggers_debrief(self):
+        import audit_debrief
+        diff = (
+            "diff --git a/src/api.py b/src/api.py\n"
+            "--- a/src/api.py\n"
+            "+++ b/src/api.py\n"
+            "@@ -1,1 +1,1 @@\n"
+            "-# old\n"
+            "+# new\n"
+        )
+        res = audit_debrief.check_diff_complexity(diff, commit_msg="feat!: drop v1 api endpoints")
+        self.assertTrue(res["should_debrief"])
+        self.assertEqual(res["action"], "debrief")
+
+        res_scope = audit_debrief.check_diff_complexity(diff, commit_msg="refactor(core)!: rewrite engine")
+        self.assertTrue(res_scope["should_debrief"])
+        self.assertEqual(res_scope["action"], "debrief")
+
+    def test_word_budget_exact_boundaries(self):
+        import audit_debrief
+        import re
+
+        def make_debrief(prose_pad_words: int, diagram_extra_words: int = 0):
+            padding = (" " + " ".join(["step"] * prose_pad_words)) if prose_pad_words > 0 else ""
+            diagram_padding = ("\n" + " ".join(["link"] * diagram_extra_words)) if diagram_extra_words > 0 else ""
+            return (
+                "### 1. In One Sentence\n"
+                "The network router balances load evenly.\n\n"
+                "### 2. The Tangible Picture\n"
+                "A mail clerk distributing envelopes into mailboxes.\n\n"
+                "```text\n"
+                "[ Box ] ---> [ Post ]"
+                f"{diagram_padding}\n"
+                "```\n\n"
+                "Where the picture breaks: breaks if mailboxes overflow.\n\n"
+                "### 3. The Ladder\n"
+                "- Level 0: Clerk sorts mail.\n"
+                "- Level 1: Distributes packets with weighted hash.\n"
+                f"- Level 2: Buffer exhaustion drops queue{padding}.\n\n"
+                "### 4. The Ice-Water Test\n"
+                "Flood port with traffic and observe drop counter in terminal.\n\n"
+                "### 5. Where the Machine Snaps\n"
+                "Snaps when socket buffer runs out of system memory.\n\n"
+                "### 6. What Was Left Out\n"
+                "Cross-region mesh failover was deferred.\n\n"
+                "Explore other lenses: /simplifeyn as workshop"
+            )
+
+        # Baseline prose count
+        base = make_debrief(0, 0)
+        prose_only = re.sub(r"```[\s\S]*?```", "", base)
+        prose_only = re.sub(r"^#{1,6}\s+.*$", "", prose_only, flags=re.MULTILINE)
+        base_prose = len(prose_only.split())
+
+        # Test prose boundary: 170 passes, 171 fails
+        debrief_170 = make_debrief(170 - base_prose, 0)
+        prose_170 = len(re.sub(r"^#{1,6}\s+.*$", "", re.sub(r"```[\s\S]*?```", "", debrief_170), flags=re.MULTILINE).split())
+        self.assertEqual(prose_170, 170)
+        res_170 = audit_debrief.audit_text(debrief_170)
+        self.assertTrue(res_170["passed"], f"170 prose words must pass: {res_170.get('errors')}")
+
+        debrief_171 = make_debrief(171 - base_prose, 0)
+        prose_171 = len(re.sub(r"^#{1,6}\s+.*$", "", re.sub(r"```[\s\S]*?```", "", debrief_171), flags=re.MULTILINE).split())
+        self.assertEqual(prose_171, 171)
+        res_171 = audit_debrief.audit_text(debrief_171)
+        self.assertFalse(res_171["passed"])
+        self.assertTrue(any("171 prose words" in err for err in res_171["errors"]))
+
+        # Test total word boundary: 250 passes, 251 fails (with prose at 160)
+        debrief_prose_160 = make_debrief(160 - base_prose, 0)
+        total_so_far = len(debrief_prose_160.split())
+        words_to_add_for_250 = 250 - total_so_far
+        debrief_250 = make_debrief(160 - base_prose, words_to_add_for_250)
+        self.assertEqual(len(debrief_250.split()), 250)
+        res_250 = audit_debrief.audit_text(debrief_250)
+        self.assertTrue(res_250["passed"], f"250 total words must pass: {res_250.get('errors')}")
+
+        debrief_251 = make_debrief(160 - base_prose, words_to_add_for_250 + 1)
+        self.assertEqual(len(debrief_251.split()), 251)
+        res_251 = audit_debrief.audit_text(debrief_251)
+        self.assertFalse(res_251["passed"])
+        self.assertTrue(any("251 total words" in err for err in res_251["errors"]))
 
     def test_diff_complexity_cli_flags(self):
         import subprocess

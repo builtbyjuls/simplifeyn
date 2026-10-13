@@ -25,7 +25,7 @@ When AI agents implement features or fix bugs, they default to reciting files an
 
 ## The Simplifeyn Alternative
 
-`simplifeyn` forces the AI coding agent into Richard Feynman's cognitive model while enforcing strict brevity (< 150 prose words, zero conversational filler):
+`simplifeyn` forces the AI coding agent into Richard Feynman's cognitive model while enforcing strict brevity (< 170 prose words, zero conversational filler):
 
 1. **In One Sentence:** The physical delta in plain language (1 sentence). Zero buzzwords (`basically`, `simply`, `optimized`, `streamlined`).
 2. **The Tangible Picture & Limits:** One sensory, mechanical analogy, ASCII flow diagram, and its breaking limit in the same breath (1-2 sentences).
@@ -49,7 +49,7 @@ Richard Feynman's approach to science and engineering rested on two immutable fo
    In software, while *Where the Picture Breaks* defines the limits of the everyday metaphor, **Where the Machine Snaps** identifies the physical stress threshold of the code itself. For vibe coders who build via iterative "prompt stacking", this prevents disaster: if the AI uses an in-memory dictionary or non-idempotent mutation, naming where the machine snaps alerts the developer before their next prompt triggers a catastrophic regression.
 
 ### Brevity & Anti-Verbosity Constraints
-- **Word Budget:** Target < 150 words of explanatory prose (excluding diagram block & headings; hard ceiling 220 total words). Fits completely in a standard terminal viewport without scrolling.
+- **Word Budget:** Target < 170 words of explanatory prose (excluding diagram block & headings; hard ceiling 250 total words). Fits completely in a standard terminal viewport without scrolling.
 - **Zero Chat Filler:** No preambles ("Sure!", "Here is what changed:"), no postambles ("Hope this helps!"). Starts directly with the first section heading and stops after the last bullet.
 
 **-> [See a complete Before vs. After Worked Example](./assets/worked-examples.md)**
@@ -106,7 +106,7 @@ Copy the `simplifeyn` folder into whichever skill directory your CLI uses:
 * **Cursor:** `~/.cursor/skills/simplifeyn/`
 
 > [!NOTE]
-> Installation paths for Cursor (`~/.cursor/skills`), Codex (`~/.agents/skills`), and Antigravity (`~/.gemini/skills`) reflect typical convention across multi-agent environments but may vary depending on CLI version. In addition, while the target budget is under 150 prose words, complex real-world diffs may expand up to the hard ceiling of 220 words.
+> Installation paths for Cursor (`~/.cursor/skills`), Codex (`~/.agents/skills`), and Antigravity (`~/.gemini/skills`) reflect typical convention across multi-agent environments but may vary depending on CLI version. In addition, while the target budget is under 170 prose words, complex real-world diffs may expand up to the hard ceiling of 250 words.
 
 ---
 
@@ -185,13 +185,16 @@ If you want your agent to conclude **every** feature implementation or bug fix w
 
 ```markdown
 ## Post-Implementation Debrief
-Whenever you complete a feature implementation, bug fix, or significant code modification, conclude your final response with a lean Feynman Debrief (< 150 words, zero pleasantries or preamble):
+Whenever you complete a feature implementation, bug fix, or significant code modification, conclude your response with a lean Feynman Debrief (< 170 words prose, zero conversational preamble):
 1. In One Sentence: The physical delta without buzzwords (1 sentence).
-2. The Tangible Picture: One mechanical analogy and where the picture breaks (1-2 sentences).
-3. The Ladder: 3 single-line rungs: Level 0 (zero jargon) -> Level 1 (practitioner) -> Level 2 (maintainer).
-4. The Ice-Water Test: 1 physical action in the app/terminal to watch the mechanism work (1 sentence).
+2. The Tangible Picture: One mechanical analogy and where the picture breaks, with an ASCII mechanism flow diagram (1-2 sentences).
+3. The Ladder: Exactly 3 single-line rungs: Level 0 (zero jargon) -> Level 1 (code & trade-offs) -> Level 2 (failure modes & scale ceilings).
+4. The Ice-Water Test: 1 physical action in the browser/terminal to observe the mechanism (1 sentence).
 5. Where the Machine Snaps: 1 code boundary limit / prompt-stacking failure condition (1 sentence).
 6. What Was Left Out: Deferred concerns and assumptions (1 line).
+7. Lens Footer: Suggest alternative lenses.
+If the change is trivial (pure docs, lockfiles, formatting), output a 1-line note and append:
+`[Simplifeyn debrief skipped: cosmetic/trivial change without causal mechanism shift]`
 ```
 
 ---
