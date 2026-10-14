@@ -23,26 +23,26 @@
 
 > **Prompt:** *"Explain what was implemented in this git diff."*
 
-This diff updates the test execution step in `.github/workflows/ci.yml`.
+The diff changes how the CI unit test step runs Jest. It swaps one set of flags for another.
 
-### Key Changes
-1. **Parallel Execution via Worker Pool (`--maxWorkers=4`):**
-   - Replaced `--runInBand` (which runs all tests serially in the main process) with `--maxWorkers=4`.
-   - Jest will now spawn a pool of four worker processes running test files concurrently, taking advantage of multi-core GitHub Actions runners to reduce total job duration.
+**Removed: `--runInBand --detectOpenHandles`**
+- `--runInBand` runs all test files one at a time in the main process. It's slow, but it avoids problems with shared state, ports, or databases.
+- `--detectOpenHandles` reports async resources left open after tests finish, such as unclosed servers, timers, or DB connections. It's a debugging aid that slows the run down.
 
-2. **Early Termination on Failure (`--bail=1`):**
-   - Added `--bail=1`, instructing the test runner to exit immediately upon the first failed assertion rather than continuing to execute the remainder of the test suite.
+**Added: `--maxWorkers=4 --bail=1`**
+- `--maxWorkers=4` runs test files in parallel across up to 4 worker processes. This should make CI noticeably faster.
+- `--bail=1` stops the run after the first failing test suite, so you get faster failure feedback and use fewer CI minutes.
 
-3. **Disabled Handle Leak Detection:**
-   - Removed `--detectOpenHandles`, eliminating post-run checks for lingering network sockets, unresolved database pools, or active timer handles.
-
-### Implications and Risks
-- **Concurrency Collisions:** Tests that share filesystem state, global mocks, or mutable database tables may produce non-deterministic race conditions when run in parallel.
-- **Silent Resource Leaks:** Without `--detectOpenHandles`, tests that leave connections or intervals open will no longer surface diagnostic warnings.
+**Effects and risks**
+- **Speed:** CI should finish sooner. Tests run in parallel, and a failure stops the run early.
+- **Flaky tests:** Tests that share state, such as a database, fixed ports, or files on disk, may now fail intermittently when run in parallel. They passed before because they ran serially.
+- **Lost leak detection:** CI no longer flags open handles. A leaked handle can show up as Jest hanging or printing "did not exit" warnings instead of a clear report.
+- **Partial results:** With `--bail=1`, you only see the first failing suite. If several suites are broken, you'll need multiple CI runs to find them all.
+- **Tuning:** The hard-coded `4` may not match the runner's core count. GitHub-hosted Linux runners typically have 2 to 4 vCPUs, so check that this value suits yours.
 
 ### Why the Baseline Falls Short
-- **Syntax Recitation:** Dissects individual CLI flags without establishing a concrete mechanical model of worker processes.
-- **Abstract Concurrency Concepts:** Mentions race conditions in passing without explaining how shared disk or database files collide.
+- **Flag Breakdown vs. Physical Mechanism:** Dissects CLI flags without providing a concrete sensory model of parallel execution or shared resource collisions.
+- **Unstructured Observations:** Bullet lists of effects and risks without grounding in a physical cause-and-effect mental model.
 - **No Hands-On Verification:** Offers no practical command to observe worker parallelization or bail termination locally.
 - **Conceals Operational Pitfalls:** Omits specific guidance for developers whose suites pass locally under serial execution but fail unpredictably in CI.
 
@@ -53,35 +53,30 @@ This diff updates the test execution step in `.github/workflows/ci.yml`.
 > **Prompt:** *"/simplifeyn"*
 
 ### 1. In One Sentence
-The test runner tests four files at once and halts on first error, cutting wait times in half.
+The check now runs four test batches at once and halts on first error, instead of running them one by one.
 
 ### 2. The Tangible Picture
-Four package inspectors checking conveyor belts at once, pulling a stop cord the second one package tears.
+One checkout lane became four lanes, and the manager closes the store at the first complaint. Where the Picture Breaks: tests often share one database, so shoppers in different lanes can grab the same item.
 
 ```text
-[ Package Batch ] ---> [ 4 Belt Inspectors ] ---> [ Ship Out Box ]
-  (Test Files)           (Parallel Workers)         (Green Build)
-                                 |
-                 [ Defect Found ---> Pull Stop Cord ]
-                   (Single Error)     (Bail Exit)
+[ Four Checkout Lanes ] ---> [ Manager Watching ] ---> [ Store Closes ]
+  (--maxWorkers=4)            (first complaint)         (--bail=1)
 ```
 
-Where the picture breaks: inspectors stand apart, but parallel software tests grab the exact same database rows.
-
 ### 3. The Ladder
-- **Level (Vibe Coder):** Tests finish in seconds, but the run stops immediately on the first failure without showing later results.
+- **Level (Vibe Coder):** Checks finish sooner, but a red result shows only the first problem, so fix it and rerun to find the next.
 
-### 4. The Screen Test
-Run npm test in terminal and observe four test bars filling side by side, halting the moment one fails.
+### 4. The Ice-Water Test
+Run npm test -- --maxWorkers=4 --bail=1 locally and confirm it stops at the first failing test.
 
 ### 5. The Danger Zone (Prompt Safety)
-- What Can Break: Tests writing to the same database table will clash unpredictably when run together.
-- Guardrail (If Prompting Next): Tell your AI: Keep four workers, but isolate database fixtures so parallel tests do not collide.
+- What Can Break: tests sharing a database or file can fail randomly, and stuck test warnings are gone.
+- Guardrail (If Prompting Next): Keep tests independent so they pass in parallel, and do not remove failure-stopping settings.
 
 ### 6. What Was Left Out
-Flaky test retries and coverage reporting were omitted.
+Test independence checks and dropped hang detection were omitted.
 
-Explore other lenses: /simplifeyn for junior-dev | for senior-dev | as warehouse
+Explore other lenses: /simplifeyn for junior-dev | for senior-dev | as transit
 
 ---
 
@@ -90,34 +85,29 @@ Explore other lenses: /simplifeyn for junior-dev | for senior-dev | as warehouse
 > **Prompt:** *"/simplifeyn for junior-dev as warehouse"*
 
 ### 1. In One Sentence
-The workflow splits test execution across four parallel worker processes with instant abort on failure, dropping open handle detection.
+CI now runs Jest on up to 4 parallel workers, stops on first failed suite, and drops open handle checks.
 
 ### 2. The Tangible Picture
-A warehouse dispatching four forklifts to separate aisles simultaneously, sounding an air horn to freeze all aisles if one drops a pallet.
+Before, one packer filled every order on a bench while an inspector hunted for leftovers. Now four packers work at once, and a bell halts the shift at the first bad order. Where the Picture Breaks: test workers share one database, ports and files.
 
 ```text
-[ Incoming Orders ] ---> [ 4 Forklift Aisles ] ---> [ Ship Out Cargo ]
-  (Test Files)            (4 Jest Processes)          (Green Build)
-                                  |
-                 [ Pallet Drops ---> Sound Air Horn ]
-                   (Test Failure)      (--bail=1)
+[ 1 Packer, 1 Bench ] ---> [ 4 Packers ] ---> [ Stop-Line Bell ]
+   (--runInBand)           (--maxWorkers=4)      (--bail=1)
 ```
 
-Where the picture breaks: physical forklift aisles have painted lines, but parallel processes writing to shared disk directories trigger file lock contention.
-
 ### 3. The Ladder
-- **Level (Junior Dev):** Swaps serial single-thread execution for four child worker processes with bail=1, removing detectOpenHandles teardown checks.
+- **Level (Junior Dev):** --runInBand forced serial execution in the main process, --maxWorkers=4 spawns a worker pool, and --bail=1 exits after one failing test suite.
 
 ### 4. The Ice-Water Test
-Add a failing assertion to one test file, run npm test, and confirm the runner aborts after the first error without executing remaining files.
+Run npm test -- --maxWorkers=4 --bail=1 locally, break one test, and watch the run stop early with only that failure listed.
 
 ### 5. Where the Machine Snaps
-Snaps when tests write unisolated fixtures to shared sqlite files or local storage, causing random test failures under concurrent execution.
+Suites sharing databases, ports or files collide in parallel, and leaked handles hang silently without detectOpenHandles.
 
 ### 6. What Was Left Out
-Transaction rollback isolation between worker threads was deferred.
+Whether the CI runner has 4 CPUs and test sharding strategies were not checked.
 
-Explore other lenses: /simplifeyn for vibe-coder | for senior-dev | as workshop
+Explore other lenses: /simplifeyn for vibe-coder | for senior-dev | as transit
 
 ---
 
@@ -126,32 +116,27 @@ Explore other lenses: /simplifeyn for vibe-coder | for senior-dev | as workshop
 > **Prompt:** *"/simplifeyn for senior-dev as workshop"*
 
 ### 1. In One Sentence
-The CI workflow replaces serial single-process execution with a 4-worker process pool and fail-fast termination, removing socket leak auditing.
+CI runs test files across 4 parallel worker processes with fail-fast exit, dropping handle leak auditing.
 
 ### 2. The Tangible Picture
-Four metal lathes powered by a shared generator, tripping the shop master breaker the microsecond any single cutter jams.
+A one-bench shop with an inspector checking for running tools is replaced by four benches shutting the shop at the first rejected part. Where the Picture Breaks: benches share one power grid, and Jest's --bail stops scheduling but leaves running suites active.
 
 ```text
-[ Stock Feed ] ---> [ 4 Cutting Lathes ] ---> [ Finished Batch ]
- (Test Queue)        (Parallel Workers)         (Clean Build)
-                             |
-              [ Lathe Jams ---> Trip Shop Breaker ]
-                (Exit Non-Zero)    (Bail on Fail)
+[ 4 Benches ] ---> [ Reject Bell ] ---> [ Shop Closes ]
+(maxWorkers=4)     (bail=1 failure)     (CI exits non-zero)
 ```
 
-Where the picture breaks: tripping a workshop breaker cuts power instantly, but background Node child processes with lingering sockets can hang until timeout.
-
 ### 3. The Ladder
-- **Level (Senior Dev):** Lowers CI duration via 4-way worker pooling and fail-fast termination, but drops open handle leak diagnostics.
+- **Level (Senior Dev):** Suite-level isolation must hold because shared fixtures, ports and DB rows race across workers, while dropping detectOpenHandles removes diagnostic warnings.
 
 ### 4. The Ice-Water Test
-Launch npm test -- --maxWorkers=4 --bail=1 on a dirty branch and verify overall execution time drops compared to serial execution.
+Run npm test -- --maxWorkers=4 --bail=1 five times locally and compare the failing suites to catch shared-state races.
 
 ### 5. Where the Machine Snaps
-Snaps when unclosed database pools or lingering HTTP keep-alive sockets cause orphaned worker processes to hang after removing detectOpenHandles.
+Tests sharing a port or database race in parallel, and bail=1 hides every failure after the first.
 
 ### 6. What Was Left Out
-Memory consumption ceilings per worker and database container isolation were omitted.
+Test isolation guarantees, runner core counts, and existing handle leaks were not evaluated.
 
 Explore other lenses: /simplifeyn for vibe-coder | for junior-dev | as transit
 
@@ -162,36 +147,32 @@ Explore other lenses: /simplifeyn for vibe-coder | for junior-dev | as transit
 > **Prompt:** *"/simplifeyn --full"*
 
 ### 1. In One Sentence
-The test runner checks four files at once and aborts upon first failure, cutting runner execution times in half.
+CI runs up to four test workers at once and stops on first failure, instead of running serially.
 
 ### 2. The Tangible Picture
-Four package inspectors checking conveyor belts simultaneously, pulling a stop cord the second one package tears.
+One checkout lane with a leak inspector became four lanes, and the manager closes the store at the first bad item. Where the Picture Breaks: the lanes share one till, so concurrent shoppers collide.
 
 ```text
-[ Batch ] ---> [ 4 Belt Inspectors ] ---> [ Pass or Stop ]
-(Suites)         (Parallel Workers)         (Exit Status)
-                        |
-       [ Defect Found ---> Pull Stop Cord ]
-         (Single Fail)      (Bail Exit)
+[ One Lane ] ---> [ Four Lanes, Store Closes at First Bad Item ]
+(--runInBand)      (--maxWorkers=4, --bail=1)
 ```
 
-Where the picture breaks: physical inspectors work in isolation, but parallel tests collide on shared database state.
-
 ### 3. The Ladder
-- **Level 0 (Vibe Coder):** Checks finish in seconds rather than minutes, but the build halts on the first failure.
-- **Level 1 (Junior Dev):** Dispatches four parallel child workers with bail=1 to halt upon first failing suite.
-- **Level 2 (Senior Dev):** Cuts CI compute time via 4-way parallelization, but abandons leak diagnostics for lingering handles.
+- **Level 0 (Vibe Coder):** Checks finish sooner, but show only the first problem.
+- **Level 1 (Junior Dev):** maxWorkers=4 parallelizes runs, bail=1 halts on first failed suite, and handle checks are removed.
+- **Level 2 (Senior Dev):** Parallelism breaks shared-state isolation, bail=1 hides later failures, and leaks go unreported.
 
 ### 4. The Ice-Water Test
-Run npm test -- --maxWorkers=4 --bail=1 and verify four worker bars fill concurrently.
+Run npm test -- --maxWorkers=4 --bail=1 with one broken test and verify early stop.
 
-### 5. Where the Machine Snaps
-Snaps when tests touch shared database records, making suites pass in isolation but fail under parallel execution.
+### 5. The Danger Zone (Prompt Safety)
+- What Can Break: random collisions when tests share state, or checks hanging without warnings.
+- Guardrail (If Prompting Next): tell the AI to keep each test independent of others.
 
 ### 6. What Was Left Out
-Flaky test retries and worker memory ceilings were omitted.
+Shared test state and runner core counts were not checked.
 
-Explore other lenses: /simplifeyn for junior-dev as warehouse | for senior-dev as workshop
+Explore other lenses: /simplifeyn for junior-dev | for senior-dev | as warehouse
 
 ---
 
@@ -201,7 +182,7 @@ All level variations strictly pass the `scripts/audit_debrief.py` linter suite:
 
 | Level Variation | Prose Words | Total Words | Banned Words | Status |
 | :--- | :---: | :---: | :---: | :---: |
-| **Vibe Coder (Default)** | 150 | 219 | 0 | `PASSED` |
-| **Junior Dev (Warehouse)** | 146 | 214 | 0 | `PASSED` |
-| **Senior Dev (Workshop)** | 143 | 211 | 0 | `PASSED` |
-| **Full Ladder (--full)** | 161 | 227 | 0 | `PASSED` |
+| **Vibe Coder (Default)** | 156 | 209 | 0 | `PASSED` |
+| **Junior Dev (Warehouse)** | 152 | 204 | 0 | `PASSED` |
+| **Senior Dev (Workshop)** | 142 | 195 | 0 | `PASSED` |
+| **Full Ladder (--full)** | 168 | 220 | 0 | `PASSED` |
