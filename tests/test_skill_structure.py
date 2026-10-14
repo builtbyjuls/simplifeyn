@@ -221,6 +221,9 @@ class TestSkillStructure(unittest.TestCase):
         self.assertIn("01-retry-backoff-gemini-3.8-flash.md", readme_content, "assets/transcripts/README.md must document Gemini fixture")
         self.assertIn("01-retry-backoff-claude-sonnet-5.5.md", readme_content, "assets/transcripts/README.md must document Claude Sonnet fixture")
         self.assertIn("01-retry-backoff-claude-opus-5.5.md", readme_content, "assets/transcripts/README.md must document Claude Opus fixture")
+        self.assertIn("02-security-flag-claude-sonnet-5.5.md", readme_content, "assets/transcripts/README.md must document Claude Sonnet 02 fixture")
+        self.assertIn("03-config-ci-claude-sonnet-5.5.md", readme_content, "assets/transcripts/README.md must document Claude Sonnet 03 fixture")
+        self.assertIn("04-docs-trivial-claude-sonnet-5.5.md", readme_content, "assets/transcripts/README.md must document Claude Sonnet 04 fixture")
 
         # Scenarios 02, 03, 04 Gemini fixtures
         for scenario_file in [
@@ -233,6 +236,18 @@ class TestSkillStructure(unittest.TestCase):
             with open(sf_path, "r", encoding="utf-8") as f:
                 sf_content = f.read()
             self.assertIn("Gemini 3.8 Flash", sf_content, f"{scenario_file} must specify Gemini 3.8 Flash model")
+
+        # Scenarios 02, 03, 04 Claude Sonnet fixtures
+        for scenario_file in [
+            "02-security-flag-claude-sonnet-5.5.md",
+            "03-config-ci-claude-sonnet-5.5.md",
+            "04-docs-trivial-claude-sonnet-5.5.md",
+        ]:
+            sf_path = os.path.join(assets_dir, "transcripts", scenario_file)
+            self.assertTrue(os.path.isfile(sf_path), f"assets/transcripts/{scenario_file} must exist")
+            with open(sf_path, "r", encoding="utf-8") as f:
+                sf_content = f.read()
+            self.assertIn("Claude Sonnet 5.5", sf_content, f"{scenario_file} must specify Claude Sonnet 5.5 model")
 
         scripts_dir = os.path.join(BASE_DIR, "scripts")
         self.assertTrue(os.path.isdir(scripts_dir), "scripts/ directory must exist")
