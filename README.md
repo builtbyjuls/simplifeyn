@@ -66,32 +66,13 @@ Install directly using the open Agent Skills ecosystem installer (`skills.sh`):
 npx skills add builtbyjuls/simplifeyn
 ```
 
-### Quick Shell Install
+### From Source (Review First)
 
-Install directly to your coding assistant with zero cloning:
-
-```bash
-# Latest main:
-curl -fsSL https://raw.githubusercontent.com/builtbyjuls/simplifeyn/main/install.sh | bash
-
-# Pinned release (v0.1.0):
-curl -fsSL https://raw.githubusercontent.com/builtbyjuls/simplifeyn/v0.1.0/install.sh | bash
-```
-
-Or target a specific client via pipe:
+Clone and inspect the repository before running the local installer:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/builtbyjuls/simplifeyn/main/install.sh | bash -s -- --claude
-curl -fsSL https://raw.githubusercontent.com/builtbyjuls/simplifeyn/main/install.sh | bash -s -- --antigravity
-```
-
-### From Source
-
-Clone and run the installer:
-
-```bash
-git clone https://github.com/builtbyjuls/simplifeyn.git /tmp/simplifeyn
-cd /tmp/simplifeyn
+git clone https://github.com/builtbyjuls/simplifeyn.git
+cd simplifeyn
 
 # Auto-detect your installed tools and install
 ./install.sh
@@ -289,6 +270,23 @@ simplifeyn/
 |   \-- get-diff.sh           # Git diff extractor helper
 \-- tests/                    # Automated TDD test suite
 ```
+
+---
+
+## Security & Capability Transparency
+
+`simplifeyn` adheres strictly to the security expectations of the Agent Skills standard and Trust Hub audits:
+
+1. **Zero Remote Execution (No Unreviewed Shell Piping):**
+   - The repository does not provide, encourage, or execute unreviewed remote script piping from URLs into a shell.
+   - `install.sh` operates 100% locally on existing files within a cloned repository and performs zero remote downloads or network calls.
+2. **Read-Only Inspection:**
+   - `scripts/get-diff.sh` only executes read-only git status and diff commands (`git rev-parse`, `git ls-files`, `git diff`, `git show`). It never modifies repository state, writes to untrusted locations, or touches the network.
+3. **Offline AST Analysis:**
+   - `scripts/audit_debrief.py` is a self-contained Python heuristic linter that analyzes text structure and string length. It has zero network connectivity and executes zero external subcommands during debrief analysis.
+4. **Indirect Prompt Injection Defense:**
+   - Ingested diff content is sandboxed within `<untrusted_diff>` and `</untrusted_diff>` boundary markers with nested tag escaping.
+   - The skill instructions explicitly direct agents to treat diff data strictly as passive code, ignoring any embedded instructions, prompt injection overrides, or tool invocation requests.
 
 ---
 

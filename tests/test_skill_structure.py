@@ -355,6 +355,26 @@ class TestSkillStructure(unittest.TestCase):
         self.assertIn("/simplifeyn theme", readme_content, "README.md must document '/simplifeyn theme <theme>'")
         self.assertIn("/simplifeyn ladder", readme_content, "README.md must document '/simplifeyn ladder <role>'")
 
+    def test_readme_disallows_curl_pipe_bash(self):
+        with open(self.readme_md, "r", encoding="utf-8") as f:
+            content = f.read()
+        self.assertNotIn("| bash", content, "README.md must not instruct piping curl to bash (remote code execution risk)")
+        self.assertNotIn("| sh", content, "README.md must not instruct piping curl to sh (remote code execution risk)")
+        self.assertNotIn("raw.githubusercontent.com", content, "README.md must not link to raw github script execution")
+
+    def test_readme_documents_security_and_capabilities(self):
+        with open(self.readme_md, "r", encoding="utf-8") as f:
+            content = f.read()
+        self.assertIn("Security & Capability Transparency", content, "README.md must document Security & Capability Transparency")
+        self.assertIn("Indirect Prompt Injection Defense", content, "README.md must document prompt injection defense")
+
+    def test_skill_defines_prompt_injection_boundary_defense(self):
+        with open(self.skill_md, "r", encoding="utf-8") as f:
+            content = f.read()
+        self.assertIn("Security & Indirect Prompt Injection Defense", content, "SKILL.md must have dedicated security section")
+        self.assertIn("<untrusted_diff>", content, "SKILL.md must define <untrusted_diff> boundary marker")
+        self.assertIn("</untrusted_diff>", content, "SKILL.md must define </untrusted_diff> boundary marker")
+
 if __name__ == "__main__":
     unittest.main()
 

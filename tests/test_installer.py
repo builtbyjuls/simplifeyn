@@ -73,41 +73,41 @@ class TestInstaller(unittest.TestCase):
         self.assertTrue(os.path.isfile(diff_script))
         self.assertTrue(os.access(diff_script, os.X_OK), "Installed scripts/get-diff.sh must be executable")
 
-    @unittest.skipUnless(os.path.isdir(os.path.join(BASE_DIR, ".git")), "Requires .git in BASE_DIR")
     def test_installer_pipe_execution(self):
         target_skills_dir = os.path.join(self.temp_dir, "skills")
         with open(self.installer, "r", encoding="utf-8") as f:
             script_text = f.read()
-        env = {**os.environ, "SIMPLIFEYN_REPO_SOURCE": BASE_DIR}
         proc = subprocess.run(
             ["bash", "-s", "--", "--target", target_skills_dir],
             input=script_text,
             cwd=BASE_DIR,
-            env=env,
             capture_output=True,
             text=True
         )
-        self.assertEqual(proc.returncode, 0, f"Piped installer failed: {proc.stderr}")
+        self.assertEqual(proc.returncode, 0, f"Piped installer inside repo failed: {proc.stderr}")
         installed_skill = os.path.join(target_skills_dir, "simplifeyn", "SKILL.md")
         self.assertTrue(os.path.isfile(installed_skill))
 
-    @unittest.skipUnless(os.path.isdir(os.path.join(BASE_DIR, ".git")), "Requires .git in BASE_DIR")
-    def test_installer_pipe_from_external_directory(self):
+    def test_installer_pipe_from_external_directory_fails_safely_without_downloads(self):
         target_skills_dir = os.path.join(self.temp_dir, "skills")
         with open(self.installer, "r", encoding="utf-8") as f:
             script_text = f.read()
-        env = {**os.environ, "SIMPLIFEYN_REPO_SOURCE": BASE_DIR}
         proc = subprocess.run(
             ["bash", "-s", "--", "--target", target_skills_dir],
             input=script_text,
             cwd=self.temp_dir,
-            env=env,
             capture_output=True,
             text=True
         )
-        self.assertEqual(proc.returncode, 0, f"Piped installer failed from external dir: {proc.stderr}")
-        installed_skill = os.path.join(target_skills_dir, "simplifeyn", "SKILL.md")
-        self.assertTrue(os.path.isfile(installed_skill))
+        self.assertNotEqual(proc.returncode, 0, "Installer piped from external dir must fail safely without downloading")
+        self.assertIn("must be run from within", proc.stderr)
+
+    def test_installer_contains_zero_network_or_download_commands(self):
+        with open(self.installer, "r", encoding="utf-8") as f:
+            content = f.read()
+        self.assertNotIn("curl ", content, "install.sh must not execute curl (zero external downloads)")
+        self.assertNotIn("git clone", content, "install.sh must not execute git clone (zero external downloads)")
+        self.assertNotIn("raw.githubusercontent.com", content, "install.sh must not reference raw.githubusercontent.com")
 
     def test_check_mode_detects_nested_transcript_drift(self):
         target_skills_dir = os.path.join(self.temp_dir, "skills")

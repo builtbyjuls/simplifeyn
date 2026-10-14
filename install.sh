@@ -4,37 +4,14 @@ set -euo pipefail
 SCRIPT_DIR=""
 if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+elif [ -f "./SKILL.md" ]; then
+  SCRIPT_DIR="$(pwd)"
 fi
 
-CLEANUP_TMP=0
-TMP_CLONE_DIR=""
 if [ -z "$SCRIPT_DIR" ] || [ ! -f "$SCRIPT_DIR/SKILL.md" ]; then
-  TMP_CLONE_DIR="$(mktemp -d)"
-  CLEANUP_TMP=1
-  cleanup() {
-    if [ "$CLEANUP_TMP" -eq 1 ] && [ -n "$TMP_CLONE_DIR" ] && [ -d "$TMP_CLONE_DIR" ]; then
-      rm -rf "$TMP_CLONE_DIR"
-    fi
-  }
-  trap cleanup EXIT INT TERM
-  REPO_SOURCE="${SIMPLIFEYN_REPO_SOURCE:-https://github.com/builtbyjuls/simplifeyn.git}"
-  SIMPLIFEYN_REF="${SIMPLIFEYN_REF:-}"
-  if command -v git >/dev/null 2>&1; then
-    if [ -n "$SIMPLIFEYN_REF" ]; then
-      git clone --depth 1 --branch "$SIMPLIFEYN_REF" "$REPO_SOURCE" "$TMP_CLONE_DIR" >/dev/null 2>&1
-    else
-      git clone --depth 1 "$REPO_SOURCE" "$TMP_CLONE_DIR" >/dev/null 2>&1
-    fi
-    SCRIPT_DIR="$TMP_CLONE_DIR"
-  elif command -v curl >/dev/null 2>&1 && command -v tar >/dev/null 2>&1; then
-    TAR_REF="${SIMPLIFEYN_REF:-main}"
-    curl -fsSL "https://github.com/builtbyjuls/simplifeyn/archive/refs/tags/${TAR_REF}.tar.gz" 2>/dev/null | tar -xz -C "$TMP_CLONE_DIR" --strip-components=1 2>/dev/null || \
-      curl -fsSL "https://github.com/builtbyjuls/simplifeyn/archive/refs/heads/${TAR_REF}.tar.gz" | tar -xz -C "$TMP_CLONE_DIR" --strip-components=1
-    SCRIPT_DIR="$TMP_CLONE_DIR"
-  else
-    echo "Error: git or (curl + tar) is required to download simplifeyn." >&2
-    exit 1
-  fi
+  echo "Error: install.sh must be run from within the simplifeyn repository." >&2
+  echo "To install, obtain a local copy of the repository first." >&2
+  exit 1
 fi
 
 SKILL_NAME="simplifeyn"
