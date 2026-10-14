@@ -225,6 +225,40 @@ If the change is trivial (pure docs, lockfiles, formatting), output a 1-line not
 `[Simplifeyn debrief skipped: cosmetic/trivial change without causal mechanism shift]`
 ```
 
+### Mode 7: Automated GitHub Action PR Reviewer
+
+Explain pull requests automatically using the Richard Feynman technique on every PR:
+
+```yaml
+# .github/workflows/simplifeyn.yml
+name: Simplifeyn PR Review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  feynman-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Simplifeyn PR Reviewer
+        uses: builtbyjuls/simplifeyn@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          api-key: ${{ secrets.GEMINI_API_KEY || secrets.ANTHROPIC_API_KEY || secrets.OPENAI_API_KEY }}
+          audience: 'vibe-coder'     # vibe-coder (default) | junior-dev | senior-dev | full
+          skip-cosmetic: 'true'      # skips trivial doc/lockfile PRs automatically
+          strict-audit: 'true'       # enforces < 170 words and zero buzzwords
+```
+
 ---
 
 ## Quality Linter & Test Suite
@@ -256,6 +290,7 @@ python3 scripts/audit_debrief.py --check-diff --commit-msg "docs: update guide" 
 simplifeyn/
 |-- SKILL.md                  # Main Agent Skill specification
 |-- README.md                 # Documentation and guide
+|-- action.yml                # Reusable GitHub Action for PR reviews
 |-- install.sh                # Universal installer
 |-- LICENSE                   # MIT License
 |-- references/
@@ -267,7 +302,8 @@ simplifeyn/
 |   \-- worked-examples.md    # Real PR diff with Before/After contrast
 |-- scripts/
 |   |-- audit_debrief.py      # Automated linter against lazy jargon
-|   \-- get-diff.sh           # Git diff extractor helper
+|   |-- get-diff.sh           # Git diff extractor helper
+|   \-- pr_reviewer.py        # GitHub Action PR Reviewer engine
 \-- tests/                    # Automated TDD test suite
 ```
 

@@ -1,0 +1,27 @@
+name: Simplifeyn PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  feynman-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Simplifeyn PR Reviewer
+        uses: ./
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          api-key: ${{ secrets.GEMINI_API_KEY || secrets.ANTHROPIC_API_KEY || secrets.OPENAI_API_KEY }}
+          audience: 'vibe-coder'
+          skip-cosmetic: 'true'
+          strict-audit: 'true'

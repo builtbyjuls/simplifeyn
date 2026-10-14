@@ -258,6 +258,13 @@ class TestSkillStructure(unittest.TestCase):
         audit_script = os.path.join(scripts_dir, "audit_debrief.py")
         self.assertTrue(os.path.isfile(audit_script), "scripts/audit_debrief.py must exist")
 
+        pr_reviewer_script = os.path.join(scripts_dir, "pr_reviewer.py")
+        self.assertTrue(os.path.isfile(pr_reviewer_script), "scripts/pr_reviewer.py must exist")
+        self.assertTrue(os.access(pr_reviewer_script, os.X_OK), "scripts/pr_reviewer.py must be executable")
+
+        action_yml = os.path.join(BASE_DIR, "action.yml")
+        self.assertTrue(os.path.isfile(action_yml), "action.yml must exist")
+
     def test_complexity_gating_documented(self):
         with open(self.skill_md, "r", encoding="utf-8") as f:
             content = f.read()

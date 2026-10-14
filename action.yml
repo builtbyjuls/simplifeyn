@@ -1,0 +1,83 @@
+name: 'Simplifeyn PR Reviewer'
+description: 'Explains pull request diffs using the Richard Feynman technique: physical mechanism first, everyday analogy with explicit limits, and an audience-calibrated ladder.'
+author: 'builtbyjuls'
+branding:
+  icon: 'zap'
+  color: 'purple'
+
+inputs:
+  github-token:
+    description: 'GitHub Token for posting pull request comments'
+    required: false
+    default: ${{ github.token }}
+  api-key:
+    description: 'API key for model provider (Gemini, Anthropic, or OpenAI)'
+    required: false
+  provider:
+    description: 'LLM provider (gemini, anthropic, openai, mock, or auto)'
+    required: false
+    default: 'auto'
+  model:
+    description: 'Model identifier to use'
+    required: false
+    default: ''
+  audience:
+    description: 'Audience calibration (vibe-coder, junior-dev, senior-dev, full)'
+    required: false
+    default: 'vibe-coder'
+  theme:
+    description: 'Physical analogy domain (workshop, transit, warehouse, kitchen, gaming)'
+    required: false
+    default: ''
+  skip-cosmetic:
+    description: 'Automatically skip trivial doc/typo diffs'
+    required: false
+    default: 'true'
+  strict-audit:
+    description: 'Strictly enforce audit checks (< 170 prose words, zero buzzwords)'
+    required: false
+    default: 'true'
+  dry-run:
+    description: 'Print debrief to stdout without posting comment'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Generate and post Feynman Debrief
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        INPUT_API_KEY: ${{ inputs.api-key }}
+        INPUT_PROVIDER: ${{ inputs.provider }}
+        INPUT_MODEL: ${{ inputs.model }}
+        INPUT_AUDIENCE: ${{ inputs.audience }}
+        INPUT_THEME: ${{ inputs.theme }}
+        INPUT_SKIP_COSMETIC: ${{ inputs.skip-cosmetic }}
+        INPUT_STRICT_AUDIT: ${{ inputs.strict-audit }}
+        INPUT_DRY_RUN: ${{ inputs.dry-run }}
+      run: |
+        DIFF_FILE="$(mktemp)"
+        if [ -n "$GITHUB_BASE_REF" ]; then
+          git diff origin/"$GITHUB_BASE_REF"...HEAD > "$DIFF_FILE"
+        else
+          git diff HEAD~1 > "$DIFF_FILE" || git diff > "$DIFF_FILE"
+        fi
+
+        ARGS=("--diff-file" "$DIFF_FILE" "--audience" "$INPUT_AUDIENCE")
+        if [ -n "$INPUT_PROVIDER" ]; then ARGS+=("--provider" "$INPUT_PROVIDER"); fi
+        if [ -n "$INPUT_API_KEY" ]; then ARGS+=("--api-key" "$INPUT_API_KEY"); fi
+        if [ -n "$INPUT_MODEL" ]; then ARGS+=("--model" "$INPUT_MODEL"); fi
+        if [ -n "$INPUT_THEME" ]; then ARGS+=("--theme" "$INPUT_THEME"); fi
+        if [ "$INPUT_SKIP_COSMETIC" = "true" ]; then ARGS+=("--skip-cosmetic"); else ARGS+=("--no-skip-cosmetic"); fi
+        if [ "$INPUT_STRICT_AUDIT" = "true" ]; then ARGS+=("--strict-audit"); fi
+        if [ "$INPUT_DRY_RUN" = "true" ]; then ARGS+=("--dry-run"); fi
+
+        python3 "$GITHUB_ACTION_PATH/scripts/pr_reviewer.py" "${ARGS[@]}"
+        rm -f "$DIFF_FILE"
