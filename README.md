@@ -280,7 +280,23 @@ cat response.txt | python3 scripts/audit_debrief.py --stdin
 python3 scripts/audit_debrief.py --check-diff git_diff.patch
 # Or pass commit message to test conventional commit heuristics:
 python3 scripts/audit_debrief.py --check-diff --commit-msg "docs: update guide" git_diff.patch
+
+# Score an explanation with the Feynman Index (0-100 Scorecard)
+python3 scripts/eval_runner.py my_explanation.md
+
+# Run the automated benchmark leaderboard across all model transcript fixtures
+python3 scripts/eval_runner.py --benchmark
 ```
+
+### The Feynman Index (0-100 Scorecard)
+
+The Feynman Index evaluates technical explanations across 5 pedagogical pillars:
+
+1. **Mechanism Purity (25 pts):** Physical causality, concrete data flow, zero banned buzzwords.
+2. **Honest Limits & Metaphor (25 pts):** Clear everyday sensory analogy and explicit breaking point.
+3. **Audience Calibration (20 pts):** Proper target rung (`vibe-coder`, `junior-dev`, `senior-dev`, or `--full`).
+4. **Empirical Verifiability (15 pts):** Concrete, single-step browser or terminal test.
+5. **Brevity & Density (15 pts):** High signal-to-noise ratio within the 170 prose-word budget.
 
 ---
 
@@ -302,6 +318,7 @@ simplifeyn/
 |   \-- worked-examples.md    # Real PR diff with Before/After contrast
 |-- scripts/
 |   |-- audit_debrief.py      # Automated linter against lazy jargon
+|   |-- eval_runner.py        # Feynman Index evals & benchmark leaderboard harness
 |   |-- get-diff.sh           # Git diff extractor helper
 |   \-- pr_reviewer.py        # GitHub Action PR Reviewer engine
 \-- tests/                    # Automated TDD test suite

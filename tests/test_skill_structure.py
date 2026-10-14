@@ -262,6 +262,10 @@ class TestSkillStructure(unittest.TestCase):
         self.assertTrue(os.path.isfile(pr_reviewer_script), "scripts/pr_reviewer.py must exist")
         self.assertTrue(os.access(pr_reviewer_script, os.X_OK), "scripts/pr_reviewer.py must be executable")
 
+        eval_runner_script = os.path.join(scripts_dir, "eval_runner.py")
+        self.assertTrue(os.path.isfile(eval_runner_script), "scripts/eval_runner.py must exist")
+        self.assertTrue(os.access(eval_runner_script, os.X_OK), "scripts/eval_runner.py must be executable")
+
         action_yml = os.path.join(BASE_DIR, "action.yml")
         self.assertTrue(os.path.isfile(action_yml), "action.yml must exist")
 
