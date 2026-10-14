@@ -33,7 +33,6 @@ REQUIRED_SECTIONS = [
     (r"(?i)#{1,3}\s+(?:\d+\.\s+)?In One Sentence", "In One Sentence"),
     (r"(?i)#{1,3}\s+(?:\d+\.\s+)?The (?:Tangible\s+|Physical\s+)?Picture", "The Picture"),
     (r"(?i)#{1,3}\s+(?:\d+\.\s+)?The Ladder", "The Ladder"),
-    (r"(?i)(?:#{1,3}\s+(?:\d+\.\s+)?Where the Picture Breaks|\bWhere the (?:Picture|Analogy) Breaks\b|\bbreaks\s+if\b|\bbreaking\s+point\b)", "Where the Picture Breaks"),
     (r"(?i)(?:#{1,3}\s+(?:\d+\.\s+)?(?:The\s+)?(?:Ice[- ]Water|Screen) Test|\b(?:Ice[- ]Water|Screen) Test\b)", "The Ice-Water Test"),
     (r"(?i)(?:#{1,3}\s+(?:\d+\.\s+)?(?:Where the Machine Snaps|The Danger Zone)|\b(?:Where the Machine Snaps|The Danger Zone)\b)", "Where the Machine Snaps"),
     (r"(?i)#{1,3}\s+(?:\d+\.\s+)?(?:What Was )?Left Out", "What Was Left Out"),
@@ -77,6 +76,21 @@ def audit_text(text: str) -> Dict[str, Any]:
         if not re.search(pattern, text):
             missing_sections.append(name)
             errors.append(f"Missing required section: '{name}'")
+
+    # Check for "Where the Picture Breaks" scoped to Section 2 or dedicated heading
+    has_breaking_point = False
+    if re.search(r"(?i)#{1,3}\s+(?:\d+\.\s+)?Where the (?:Picture|Analogy) Breaks", text):
+        has_breaking_point = True
+    else:
+        pic_match = re.search(r"(?i)#{1,3}\s+(?:\d+\.\s+)?The (?:Tangible\s+|Physical\s+)?Picture\s*\n+([\s\S]*?)(?=\n+#{1,3}|\Z)", text)
+        if pic_match:
+            pic_text = pic_match.group(1)
+            if re.search(r"(?i)(?:Where the (?:Picture|Analogy) Breaks|\bbreaks\s+if\b|\bbreaking\s+point\b)", pic_text):
+                has_breaking_point = True
+
+    if not has_breaking_point:
+        missing_sections.append("Where the Picture Breaks")
+        errors.append("Missing required section: 'Where the Picture Breaks'")
 
     # Check that "In One Sentence" is truly a single sentence
     if "In One Sentence" not in missing_sections:
@@ -146,7 +160,6 @@ LOCKFILES_AND_IGNORES = {
     ".gitignore", ".gitattributes", ".editorconfig",
     ".npmignore", ".dockerignore", "license", "notice", "authors",
 }
-CONFIG_OR_CI_EXTS = {".json", ".yml", ".yaml", ".toml", ".ini", ".env", ".conf"}
 
 
 def check_diff_complexity(diff_text: str, commit_msg: str = "") -> Dict[str, Any]:
@@ -198,7 +211,13 @@ def check_diff_complexity(diff_text: str, commit_msg: str = "") -> Dict[str, Any
         if (line.startswith("+") and not line.startswith("+++")) or (line.startswith("-") and not line.startswith("---")):
             content_line = line[1:].strip()
             if content_line:
-                stripped = re.sub(r"^\s*(?://|#|/\*|\*).*$", "", content_line).strip()
+                # Pointer dereferences / C assignments (e.g. *out = 42;, *ptr = val;, *p++, etc.) are executable statements
+                if re.match(r"^\*+\s*[_a-zA-Z0-9].*=", content_line) or re.match(r"^\*+\s*[_a-zA-Z0-9].*;", content_line):
+                    has_non_comment_content = True
+                    break
+                stripped = re.sub(r"^\s*(?://|#|--|<!--|/\*|\*(?:\s+|\Z)).*$", "", content_line).strip()
+                if stripped.startswith('"""') or stripped.startswith("'''"):
+                    stripped = ""
                 if stripped:
                     has_non_comment_content = True
                     break

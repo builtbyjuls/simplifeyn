@@ -18,11 +18,18 @@ if [ -z "$SCRIPT_DIR" ] || [ ! -f "$SCRIPT_DIR/SKILL.md" ]; then
   }
   trap cleanup EXIT INT TERM
   REPO_SOURCE="${SIMPLIFEYN_REPO_SOURCE:-https://github.com/builtbyjuls/simplifeyn.git}"
+  SIMPLIFEYN_REF="${SIMPLIFEYN_REF:-}"
   if command -v git >/dev/null 2>&1; then
-    git clone --depth 1 "$REPO_SOURCE" "$TMP_CLONE_DIR" >/dev/null 2>&1
+    if [ -n "$SIMPLIFEYN_REF" ]; then
+      git clone --depth 1 --branch "$SIMPLIFEYN_REF" "$REPO_SOURCE" "$TMP_CLONE_DIR" >/dev/null 2>&1
+    else
+      git clone --depth 1 "$REPO_SOURCE" "$TMP_CLONE_DIR" >/dev/null 2>&1
+    fi
     SCRIPT_DIR="$TMP_CLONE_DIR"
   elif command -v curl >/dev/null 2>&1 && command -v tar >/dev/null 2>&1; then
-    curl -fsSL https://github.com/builtbyjuls/simplifeyn/archive/refs/heads/main.tar.gz | tar -xz -C "$TMP_CLONE_DIR" --strip-components=1
+    TAR_REF="${SIMPLIFEYN_REF:-main}"
+    curl -fsSL "https://github.com/builtbyjuls/simplifeyn/archive/refs/tags/${TAR_REF}.tar.gz" 2>/dev/null | tar -xz -C "$TMP_CLONE_DIR" --strip-components=1 2>/dev/null || \
+      curl -fsSL "https://github.com/builtbyjuls/simplifeyn/archive/refs/heads/${TAR_REF}.tar.gz" | tar -xz -C "$TMP_CLONE_DIR" --strip-components=1
     SCRIPT_DIR="$TMP_CLONE_DIR"
   else
     echo "Error: git or (curl + tar) is required to download simplifeyn." >&2
@@ -40,7 +47,7 @@ Install simplifeyn skill to one or more AI coding assistants.
 
 Options:
   --claude         Install to ~/.claude/skills/ (Claude Code)
-  --antigravity    Install to ~/.gemini/skills/ (Antigravity CLI)
+  --antigravity    Install to ~/.gemini/config/skills/ (Antigravity CLI)
   --codex          Install to ~/.agents/skills/ (OpenAI Codex / Agent Skills standard)
   --cursor         Install to ~/.cursor/skills/ (Cursor)
   --project        Install to current repository project (.agents/skills/)
@@ -65,7 +72,7 @@ while [ $# -gt 0 ]; do
       shift
       ;;
     --antigravity)
-      TARGETS+=("$HOME/.gemini/skills")
+      TARGETS+=("$HOME/.gemini/config/skills")
       shift
       ;;
     --codex)
@@ -91,7 +98,7 @@ while [ $# -gt 0 ]; do
       ;;
     --all)
       [ -d "$HOME/.claude" ] && TARGETS+=("$HOME/.claude/skills")
-      [ -d "$HOME/.gemini" ] && TARGETS+=("$HOME/.gemini/skills")
+      [ -d "$HOME/.gemini" ] && TARGETS+=("$HOME/.gemini/config/skills")
       [ -d "$HOME/.agents" ] && TARGETS+=("$HOME/.agents/skills")
       [ -d "$HOME/.cursor" ] && TARGETS+=("$HOME/.cursor/skills")
       shift
@@ -114,7 +121,7 @@ done
 
 # If no target specified, detect available clients
 if [ ${#TARGETS[@]} -eq 0 ]; then
-  if [ -d "$HOME/.gemini" ]; then TARGETS+=("$HOME/.gemini/skills"); fi
+  if [ -d "$HOME/.gemini" ]; then TARGETS+=("$HOME/.gemini/config/skills"); fi
   if [ -d "$HOME/.claude" ]; then TARGETS+=("$HOME/.claude/skills"); fi
   if [ -d "$HOME/.agents" ]; then TARGETS+=("$HOME/.agents/skills"); fi
   if [ -d "$HOME/.cursor" ]; then TARGETS+=("$HOME/.cursor/skills"); fi
@@ -144,6 +151,11 @@ install_to() {
     cp -R "$SCRIPT_DIR/scripts" "$dest/"
     chmod +x "$dest/scripts/"*
   fi
+
+  # Clean up byte-compiled python artifacts and cache folders
+  find "$dest" -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+  find "$dest" -type f -name "*.pyc" -delete 2>/dev/null || true
+
   echo "[OK] Installed $SKILL_NAME to $dest"
 }
 
@@ -167,18 +179,14 @@ check_in() {
         echo "[FAIL] $dest/$subdir directory is missing"
         return 1
       fi
-      local src_file
-      for src_file in "$SCRIPT_DIR/$subdir"/*; do
-        if [ -f "$src_file" ]; then
-          local rel_name
-          rel_name="$(basename "$src_file")"
-          local target_file="$dest/$subdir/$rel_name"
-          if [ ! -f "$target_file" ] || ! cmp -s "$src_file" "$target_file"; then
-            echo "[FAIL] $dest/$subdir/$rel_name is missing or modified"
-            return 1
-          fi
+      while IFS= read -r -d '' src_file; do
+        local rel_path="${src_file#$SCRIPT_DIR/}"
+        local target_file="$dest/$rel_path"
+        if [ ! -f "$target_file" ] || ! cmp -s "$src_file" "$target_file"; then
+          echo "[FAIL] $dest/$rel_path is missing or modified"
+          return 1
         fi
-      done
+      done < <(find "$SCRIPT_DIR/$subdir" -type f ! -name "*.pyc" ! -path "*/__pycache__/*" -print0)
     fi
   done
 

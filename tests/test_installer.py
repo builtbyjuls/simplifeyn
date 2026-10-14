@@ -109,5 +109,33 @@ class TestInstaller(unittest.TestCase):
         installed_skill = os.path.join(target_skills_dir, "simplifeyn", "SKILL.md")
         self.assertTrue(os.path.isfile(installed_skill))
 
+    def test_check_mode_detects_nested_transcript_drift(self):
+        target_skills_dir = os.path.join(self.temp_dir, "skills")
+        # Install first
+        subprocess.run([self.installer, "--target", target_skills_dir], check=True, capture_output=True)
+
+        # Modify a nested file in assets/transcripts
+        nested_file = os.path.join(
+            target_skills_dir, "simplifeyn", "assets", "transcripts", "01-retry-backoff-gemini-3.8-flash.md"
+        )
+        self.assertTrue(os.path.isfile(nested_file), "Nested transcript file must exist")
+        with open(nested_file, "a", encoding="utf-8") as f:
+            f.write("\n# drifted transcript line\n")
+
+        proc = subprocess.run([self.installer, "--check", "--target", target_skills_dir], capture_output=True, text=True)
+        self.assertNotEqual(proc.returncode, 0, "--check must detect drift in nested subdirectories like assets/transcripts/")
+
+    def test_antigravity_target_uses_gemini_config_skills(self):
+        proc = subprocess.run([self.installer, "--help"], capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn(".gemini/config/skills", proc.stdout, "--help must document ~/.gemini/config/skills for Antigravity")
+
+    def test_install_excludes_pycache(self):
+        target_skills_dir = os.path.join(self.temp_dir, "skills")
+        subprocess.run([self.installer, "--target", target_skills_dir], check=True, capture_output=True)
+        installed_scripts = os.path.join(target_skills_dir, "simplifeyn", "scripts")
+        pycache_dir = os.path.join(installed_scripts, "__pycache__")
+        self.assertFalse(os.path.exists(pycache_dir), "__pycache__ must not be installed")
+
 if __name__ == "__main__":
     unittest.main()

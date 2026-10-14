@@ -1046,5 +1046,45 @@ class TestAuditDebrief(unittest.TestCase):
             found_lower = [w.lower() for w in res["banned_words_found"]]
             self.assertIn(word.lower(), found_lower, f"Linter must detect banned word '{word}' in banned_words_found")
 
+    def test_pointer_dereference_in_c_triggers_debrief(self):
+        import audit_debrief
+        c_diff = (
+            "diff --git a/src/core.c b/src/core.c\n"
+            "--- a/src/core.c\n"
+            "+++ b/src/core.c\n"
+            "@@ -10,1 +10,1 @@\n"
+            "-*out = 0;\n"
+            "+*out = 42;\n"
+        )
+        res = audit_debrief.check_diff_complexity(c_diff)
+        self.assertTrue(res["should_debrief"], "Pointer write '*out = 42;' must trigger debrief, not be stripped as a comment")
+
+    def test_missing_where_picture_breaks_in_section_2_fails_even_if_section_5_has_breaks_if(self):
+        import audit_debrief
+        text = (
+            "### 1. In One Sentence\n"
+            "Requests check local cache before disk.\n\n"
+            "### 2. The Tangible Picture\n"
+            "A cook keeping spices on the prep counter.\n\n"
+            "```text\n"
+            "[ Order ] ---> [ Prep ] ---> [ Plate ]\n"
+            "```\n\n"
+            "### 3. The Ladder\n"
+            "- **Level (Vibe Coder):** Keeps frequent items on table.\n\n"
+            "### 4. The Screen Test\n"
+            "Click fetch twice in preview.\n\n"
+            "### 5. Where the Machine Snaps\n"
+            "This breaks if the server restarts and memory drops.\n\n"
+            "### 6. What Was Left Out\n"
+            "Distributed sync was omitted.\n"
+        )
+        res = audit_debrief.audit_text(text)
+        self.assertFalse(res["passed"], "Debrief omitting breaking point in Section 2 must fail even if Section 5 says 'breaks if'")
+        self.assertIn("Where the Picture Breaks", res["missing_sections"])
+
+    def test_dead_constant_removed(self):
+        import audit_debrief
+        self.assertFalse(hasattr(audit_debrief, "CONFIG_OR_CI_EXTS"), "CONFIG_OR_CI_EXTS dead constant should be removed")
+
 if __name__ == "__main__":
     unittest.main()

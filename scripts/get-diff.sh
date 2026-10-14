@@ -16,24 +16,6 @@ detect_project_surface() {
   local has_cli=0
   local details=""
 
-  # Check for frontend / UI indicators
-  if [ -f "$toplevel/index.html" ] || [ -d "$toplevel/src/components" ] || [ -d "$toplevel/ui" ]; then
-    has_ui=1
-    details="HTML/UI components"
-  fi
-  if [ -f "$toplevel/package.json" ]; then
-    if grep -iqE '"(react|vue|svelte|next|nuxt|solid-js|angular|electron)"' "$toplevel/package.json" 2>/dev/null; then
-      has_ui=1
-      details="Web UI"
-    fi
-  fi
-  if [ "$has_ui" -eq 0 ]; then
-    if (set +o pipefail; git ls-files "$toplevel" 2>/dev/null | grep -qE '\.(html|jsx|tsx|vue|svelte)$'); then
-      has_ui=1
-      details="UI templates/components"
-    fi
-  fi
-
   # Check for backend indicators
   if [ -f "$toplevel/pom.xml" ] || [ -f "$toplevel/build.gradle" ] || [ -f "$toplevel/build.gradle.kts" ]; then
     has_backend=1
@@ -47,6 +29,29 @@ detect_project_surface() {
   elif [ -f "$toplevel/requirements.txt" ] || [ -f "$toplevel/pyproject.toml" ]; then
     has_backend=1
     details="${details:-Python backend}"
+  fi
+
+  # Check for frontend / UI indicators
+  if [ -f "$toplevel/index.html" ] || [ -d "$toplevel/src/components" ] || [ -d "$toplevel/ui" ]; then
+    has_ui=1
+    details="HTML/UI components"
+  fi
+  if [ -f "$toplevel/package.json" ]; then
+    if grep -iqE '"(react|vue|svelte|next|nuxt|solid-js|angular|electron)"' "$toplevel/package.json" 2>/dev/null; then
+      has_ui=1
+      details="Web UI"
+    fi
+  fi
+  if [ "$has_ui" -eq 0 ]; then
+    if (set +o pipefail; git ls-files "$toplevel" 2>/dev/null | grep -qE '\.(jsx|tsx|vue|svelte)$'); then
+      has_ui=1
+      details="UI components"
+    elif [ "$has_backend" -eq 0 ]; then
+      if (set +o pipefail; git ls-files "$toplevel" 2>/dev/null | grep -qE '\.html$'); then
+        has_ui=1
+        details="HTML templates/pages"
+      fi
+    fi
   fi
 
   # Check for CLI indicators
@@ -85,7 +90,15 @@ run_git_diff() {
   git diff --stat "$@"
   echo ""
   echo "=== Diff Content ==="
-  git diff "$@"
+  local diff_lines
+  diff_lines=$(git diff "$@" | wc -l)
+  if [ "$diff_lines" -gt 600 ]; then
+    git diff "$@" | head -n 400
+    echo ""
+    echo "[... Truncated: diff exceeds 600 lines ($diff_lines lines total). Use 'git diff --stat' for full summary.]"
+  else
+    git diff "$@"
+  fi
 }
 
 run_git_show() {
@@ -99,10 +112,27 @@ run_git_show() {
 }
 
 if [ $# -gt 0 ]; then
-  if [[ "$1" == -* ]]; then
-    echo "Error: Options and flags are not supported: $1" >&2
+  for arg in "$@"; do
+    if [[ "$arg" == -* ]]; then
+      echo "Error: Options and flags are not supported: $arg" >&2
+      exit 1
+    fi
+  done
+
+  if [ $# -eq 2 ]; then
+    REV1="$1"
+    REV2="$2"
+    if ! git rev-parse "$REV1" >/dev/null 2>&1 || ! git rev-parse "$REV2" >/dev/null 2>&1; then
+      echo "Error: Invalid revisions: $REV1 $REV2" >&2
+      exit 1
+    fi
+    run_git_diff "$REV1..$REV2"
+    exit 0
+  elif [ $# -gt 2 ]; then
+    echo "Error: Too many arguments: expected at most 2 revisions." >&2
     exit 1
   fi
+
   TARGET="$1"
 
   if [ "$TARGET" = "staged" ]; then
@@ -141,13 +171,30 @@ fi
 
 # Default mode (no arguments):
 # 1. Check if uncommitted working tree changes exist
-UNCOMMITTED=$(git status --porcelain 2>/dev/null || true)
-if [ -n "$UNCOMMITTED" ]; then
+UNTRACKED=$(git status --porcelain 2>/dev/null | grep -E '^\?\?' || true)
+TRACKED_MODS=$(git status --porcelain 2>/dev/null | grep -vE '^\?\?' || true)
+
+if [ -n "$TRACKED_MODS" ]; then
   if git rev-parse --verify HEAD >/dev/null 2>&1; then
     run_git_diff HEAD
   else
     run_git_diff
   fi
+  if [ -n "$UNTRACKED" ]; then
+    echo ""
+    echo "=== Untracked Files ==="
+    echo "$UNTRACKED"
+  fi
+  exit 0
+fi
+
+if [ -n "$UNTRACKED" ]; then
+  detect_project_surface
+  echo "=== Untracked Files ==="
+  echo "$UNTRACKED"
+  echo ""
+  echo "=== Diff Content (Untracked Preview) ==="
+  git status -u
   exit 0
 fi
 

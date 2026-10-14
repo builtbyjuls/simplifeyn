@@ -159,5 +159,54 @@ class TestGetDiff(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
         self.assertIn("Note: UI/dashboards marked as deferred in project memory", proc.stdout)
 
+    def test_backend_with_template_html_stays_headless_backend(self):
+        # Rust or Go backend with a template email.html file should stay Headless Backend
+        cargo_path = os.path.join(self.temp_repo, "Cargo.toml")
+        with open(cargo_path, "w", encoding="utf-8") as f:
+            f.write("[package]\nname = 'service'\n")
+        tmpl_dir = os.path.join(self.temp_repo, "templates")
+        os.makedirs(tmpl_dir, exist_ok=True)
+        with open(os.path.join(tmpl_dir, "email.html"), "w", encoding="utf-8") as f:
+            f.write("<h1>Email</h1>\n")
+        subprocess.run(["git", "add", "."], cwd=self.temp_repo, check=True)
+        subprocess.run(["git", "commit", "-m", "feat: backend with template"], cwd=self.temp_repo, check=True, capture_output=True)
+
+        proc = subprocess.run([self.script], cwd=self.temp_repo, capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("Surface: Headless Backend", proc.stdout)
+        self.assertNotIn("Surface: Web/UI App", proc.stdout)
+
+    def test_two_arguments_diff_range(self):
+        # Commit 1 already in setUp
+        # Commit 2
+        file2 = os.path.join(self.temp_repo, "file2.txt")
+        with open(file2, "w", encoding="utf-8") as f:
+            f.write("data 2\n")
+        subprocess.run(["git", "add", "."], cwd=self.temp_repo, check=True)
+        subprocess.run(["git", "commit", "-m", "feat: commit 2"], cwd=self.temp_repo, check=True, capture_output=True)
+
+        # Commit 3
+        with open(file2, "a", encoding="utf-8") as f:
+            f.write("data 3\n")
+        subprocess.run(["git", "add", "."], cwd=self.temp_repo, check=True)
+        subprocess.run(["git", "commit", "-m", "feat: commit 3"], cwd=self.temp_repo, check=True, capture_output=True)
+
+        # Run get-diff.sh HEAD~2 HEAD
+        proc = subprocess.run([self.script, "HEAD~2", "HEAD"], cwd=self.temp_repo, capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("data 2", proc.stdout)
+        self.assertIn("data 3", proc.stdout)
+
+    def test_untracked_files_warned_or_reported(self):
+        # Create an untracked file without any tracked changes
+        untracked = os.path.join(self.temp_repo, "new_feature.py")
+        with open(untracked, "w", encoding="utf-8") as f:
+            f.write("def new_feature(): pass\n")
+
+        proc = subprocess.run([self.script], cwd=self.temp_repo, capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("Untracked", proc.stdout)
+        self.assertIn("new_feature.py", proc.stdout)
+
 if __name__ == "__main__":
     unittest.main()

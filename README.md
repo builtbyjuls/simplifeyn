@@ -97,7 +97,7 @@ cd /tmp/simplifeyn
 ./install.sh
 
 # Or target a specific client:
-./install.sh --antigravity   # Installs to ~/.gemini/skills/
+./install.sh --antigravity   # Installs to ~/.gemini/config/skills/
 ./install.sh --claude        # Installs to ~/.claude/skills/
 ./install.sh --codex         # Installs to ~/.agents/skills/
 ./install.sh --cursor        # Installs to ~/.cursor/skills/
@@ -108,13 +108,13 @@ cd /tmp/simplifeyn
 
 Copy the `simplifeyn` folder into whichever skill directory your CLI uses:
 
-* **Antigravity CLI:** `~/.gemini/skills/simplifeyn/`
+* **Antigravity CLI:** `~/.gemini/config/skills/simplifeyn/`
 * **Claude Code:** `~/.claude/skills/simplifeyn/`
 * **OpenAI Codex CLI:** `~/.agents/skills/simplifeyn/`
 * **Cursor:** `~/.cursor/skills/simplifeyn/`
 
 > [!NOTE]
-> Installation paths for Cursor (`~/.cursor/skills`), Codex (`~/.agents/skills`), and Antigravity (`~/.gemini/skills`) reflect typical convention across multi-agent environments but may vary depending on CLI version. In addition, while the target budget is under 170 prose words, complex real-world diffs may expand up to the hard ceiling of 250 words.
+> Installation paths for Cursor (`~/.cursor/skills`), Codex (`~/.agents/skills`), and Antigravity (`~/.gemini/config/skills`) reflect typical convention across multi-agent environments but may vary depending on CLI version. In addition, while the target budget is under 170 prose words, complex real-world diffs may expand up to the hard ceiling of 250 words.
 
 ---
 

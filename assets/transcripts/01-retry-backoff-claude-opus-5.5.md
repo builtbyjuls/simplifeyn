@@ -103,7 +103,7 @@ Turn Wi-Fi off, click a button that loads data, and see an error after roughly 3
 
 ### 5. The Danger Zone (Prompt Safety)
 - What Can Break: wrapping a pay action could charge twice.
-- Next Prompt: Only retry data loading, never payments; keep the error visible.
+- Guardrail (If Prompting Next): Only retry data loading, never payments; keep the error visible.
 
 ### 6. What Was Left Out
 No wait cap, no cancel button, no server down versus wrong address split.

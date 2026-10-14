@@ -79,7 +79,7 @@ Turn off Wi-Fi, click the button in app preview, and watch the app pause and ret
 
 ### 5. The Danger Zone (Prompt Safety)
 - What Can Break: Never use on payment buttons, or customers get charged twice when Wi-Fi stutters.
-- Next Prompt: Tell your AI: Keep retry on client.ts, but never retry checkout forms.
+- Guardrail (If Prompting Next): Keep retry on client.ts, but never retry checkout forms.
 
 ### 6. What Was Left Out
 Wrong passwords and missing pages error immediately without retrying.

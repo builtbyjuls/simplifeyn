@@ -93,7 +93,7 @@ Turn Wi-Fi off, click the load button in the preview, and watch the pauses grow.
 
 ### 5. The Danger Zone (Prompt Safety)
 - What Can Break: Screens can feel stuck for about 7 seconds.
-- Next Prompt: Keep the growing waits, show a spinner during them, and cap total waiting at 10 seconds.
+- Guardrail (If Prompting Next): If you modify client.ts, keep retry on background loads but never retry checkout or submit forms.
 
 ### 6. What Was Left Out
 Which failures deserve a retry, and a maximum wait cap.
