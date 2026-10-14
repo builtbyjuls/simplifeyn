@@ -222,6 +222,18 @@ class TestSkillStructure(unittest.TestCase):
         self.assertIn("01-retry-backoff-claude-sonnet-5.5.md", readme_content, "assets/transcripts/README.md must document Claude Sonnet fixture")
         self.assertIn("01-retry-backoff-claude-opus-5.5.md", readme_content, "assets/transcripts/README.md must document Claude Opus fixture")
 
+        # Scenarios 02, 03, 04 Gemini fixtures
+        for scenario_file in [
+            "02-security-flag-gemini-3.8-flash.md",
+            "03-config-ci-gemini-3.8-flash.md",
+            "04-docs-trivial-gemini-3.8-flash.md",
+        ]:
+            sf_path = os.path.join(assets_dir, "transcripts", scenario_file)
+            self.assertTrue(os.path.isfile(sf_path), f"assets/transcripts/{scenario_file} must exist")
+            with open(sf_path, "r", encoding="utf-8") as f:
+                sf_content = f.read()
+            self.assertIn("Gemini 3.8 Flash", sf_content, f"{scenario_file} must specify Gemini 3.8 Flash model")
+
         scripts_dir = os.path.join(BASE_DIR, "scripts")
         self.assertTrue(os.path.isdir(scripts_dir), "scripts/ directory must exist")
         get_diff = os.path.join(scripts_dir, "get-diff.sh")

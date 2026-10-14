@@ -294,6 +294,69 @@ class TestAuditDebrief(unittest.TestCase):
                 result = audit_debrief.audit_text(section)
                 self.assertTrue(result["passed"], f"Transcript '{tf}' section '{marker}' must pass audit: {result.get('errors')}")
 
+    def test_transcript_02_security_flag_passes_audit(self):
+        import audit_debrief
+        tf = "02-security-flag-gemini-3.8-flash.md"
+        transcript_path = os.path.join(BASE_DIR, "assets", "transcripts", tf)
+        self.assertTrue(os.path.isfile(transcript_path), f"Transcript fixture '{tf}' must exist")
+        with open(transcript_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        level_markers = [
+            "## 3. Simplifeyn Output: Level (Vibe Coder - Default)",
+            "## 4. Simplifeyn Output: Level (Junior Dev with Workshop Lens)",
+            "## 5. Simplifeyn Output: Level (Senior Dev with Transit Lens)",
+            "## 6. Simplifeyn Output: Full 3-Rung Ladder (--full)",
+        ]
+        for marker in level_markers:
+            self.assertIn(marker, content, f"Transcript '{tf}' must contain section '{marker}'")
+            section = content.split(marker, 1)[1].split("\n---\n")[0].strip()
+            if "> **Prompt:**" in section:
+                section = section.split("\n\n", 1)[1].strip()
+            if "\n### Audit Verification" in section:
+                section = section.split("\n### Audit Verification")[0].strip()
+            result = audit_debrief.audit_text(section)
+            self.assertTrue(result["passed"], f"Transcript '{tf}' section '{marker}' must pass audit: {result.get('errors')}")
+
+    def test_transcript_03_config_ci_passes_audit(self):
+        import audit_debrief
+        tf = "03-config-ci-gemini-3.8-flash.md"
+        transcript_path = os.path.join(BASE_DIR, "assets", "transcripts", tf)
+        self.assertTrue(os.path.isfile(transcript_path), f"Transcript fixture '{tf}' must exist")
+        with open(transcript_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        level_markers = [
+            "## 3. Simplifeyn Output: Level (Vibe Coder - Default)",
+            "## 4. Simplifeyn Output: Level (Junior Dev with Warehouse Lens)",
+            "## 5. Simplifeyn Output: Level (Senior Dev with Workshop Lens)",
+            "## 6. Simplifeyn Output: Full 3-Rung Ladder (--full)",
+        ]
+        for marker in level_markers:
+            self.assertIn(marker, content, f"Transcript '{tf}' must contain section '{marker}'")
+            section = content.split(marker, 1)[1].split("\n---\n")[0].strip()
+            if "> **Prompt:**" in section:
+                section = section.split("\n\n", 1)[1].strip()
+            if "\n### Audit Verification" in section:
+                section = section.split("\n### Audit Verification")[0].strip()
+            result = audit_debrief.audit_text(section)
+            self.assertTrue(result["passed"], f"Transcript '{tf}' section '{marker}' must pass audit: {result.get('errors')}")
+
+    def test_transcript_04_docs_trivial_passes_skip_check(self):
+        import re
+        import audit_debrief
+        tf = "04-docs-trivial-gemini-3.8-flash.md"
+        transcript_path = os.path.join(BASE_DIR, "assets", "transcripts", tf)
+        self.assertTrue(os.path.isfile(transcript_path), f"Transcript fixture '{tf}' must exist")
+        with open(transcript_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        self.assertIn("[Simplifeyn debrief skipped", content, f"Transcript '{tf}' must contain skipped debrief marker")
+        diff_match = re.search(r"```diff\n([\s\S]*?)```", content)
+        self.assertIsNotNone(diff_match, "Transcript 04 must contain diff block")
+        check_res = audit_debrief.check_diff_complexity(diff_match.group(1))
+        self.assertFalse(check_res["should_debrief"], "Diff in transcript 04 must be evaluated as skip by check_diff_complexity")
+
     def test_worked_example_contains_skipped_scenario(self):
         worked_examples_path = os.path.join(BASE_DIR, "assets", "worked-examples.md")
         with open(worked_examples_path, "r", encoding="utf-8") as f:
