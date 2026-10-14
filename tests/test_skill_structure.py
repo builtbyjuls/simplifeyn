@@ -375,6 +375,15 @@ class TestSkillStructure(unittest.TestCase):
         self.assertIn("<untrusted_diff>", content, "SKILL.md must define <untrusted_diff> boundary marker")
         self.assertIn("</untrusted_diff>", content, "SKILL.md must define </untrusted_diff> boundary marker")
 
+    def test_readme_ladder_matches_current_audience_setup(self):
+        with open(self.readme_md, "r", encoding="utf-8") as f:
+            content = f.read()
+        self.assertIn("audience-calibrated ladder from vibe coder to system maintainer", content)
+        self.assertIn("Level (Vibe Coder)", content)
+        self.assertIn("Level (Junior Dev)", content)
+        self.assertIn("Level (Senior Dev)", content)
+        self.assertNotIn("Level 0 (Kitchen Table)", content, "README.md Section 3 must match current audience setup")
+
 if __name__ == "__main__":
     unittest.main()
 

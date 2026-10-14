@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 [![CI](https://github.com/builtbyjuls/simplifeyn/actions/workflows/ci.yml/badge.svg)](https://github.com/builtbyjuls/simplifeyn/actions/workflows/ci.yml)
 
-> **An Agent Skill that explains code changes, PR diffs, and feature implementations the way Richard Feynman explained physics: physical mechanism first, one honest everyday analogy with its exact limits, and a ladder from kitchen-table simplicity to maintainer edge cases.**
+> **An Agent Skill that explains code changes, PR diffs, and feature implementations the way Richard Feynman explained physics: physical mechanism first, one honest everyday analogy with its exact limits, and an audience-calibrated ladder from vibe coder to system maintainer.**
 
 Compatible with **Claude Code**, **Google Antigravity CLI**, **OpenAI Codex CLI**, **Cursor**, and any tool supporting the [Agent Skills open standard](https://agentskills.io).
 
@@ -29,10 +29,10 @@ When AI agents implement features or fix bugs, they default to reciting files an
 
 1. **In One Sentence:** The physical delta in plain language (1 sentence). Zero buzzwords (`basically`, `simply`, `optimized`, `streamlined`).
 2. **The Tangible Picture & Limits:** One sensory, mechanical analogy, ASCII flow diagram, and its breaking limit in the same breath (1-2 sentences).
-3. **The Ladder:** Exactly 3 tight, single-line bullets:
-   * **Level 0 (Kitchen Table):** Zero jargon. Understandable by a non-technical stakeholder or curious 10-year-old.
-   * **Level 1 (Practitioner):** Code mechanics, data structures, state transitions, and real-world trade-offs.
-   * **Level 2 (Maintainer):** Failure modes, invariants, concurrency, scale ceilings, and rejected alternative approaches.
+3. **The Ladder:** Calibrated to the active audience (defaults to 1 targeted single-line rung; all 3 rungs with `--full`):
+   * **Level (Vibe Coder):** (Default) App behavior, state/event flow, and prompt-stacking safety without syntax jargon.
+   * **Level (Junior Dev):** Code symbols, data structures, and foundational programming patterns.
+   * **Level (Senior Dev):** Invariants, concurrency boundaries, latency/memory trade-offs, and scale ceilings.
 4. **The Ice-Water Test:** 1 physical sensory action in the browser, terminal, or DevTools to watch the mechanism work right now (1 sentence).
 5. **Where the Machine Snaps:** The exact code stress boundary, concurrency race, or prompt-stacking failure limit (1 sentence).
 6. **What Was Left Out:** Explicitly names what was simplified or deferred in 1 line.
@@ -216,7 +216,7 @@ If you want your agent to conclude **every** feature implementation or bug fix w
 Whenever you complete a feature implementation, bug fix, or significant code modification, conclude your response with a lean Feynman Debrief (< 170 words prose, zero conversational preamble):
 1. In One Sentence: The physical delta without buzzwords (1 sentence).
 2. The Tangible Picture: One mechanical analogy and where the picture breaks, with an ASCII mechanism flow diagram (1-2 sentences).
-3. The Ladder: 1 targeted single-line rung for active audience (default vibe-coder) or all 3 progressive rungs (Level 0 -> Level 1 -> Level 2).
+3. The Ladder: 1 targeted single-line rung for active audience (default vibe-coder: Level (Vibe Coder)) or all 3 progressive rungs if requested with --full (Level 0 / Vibe Coder -> Level 1 / Junior Dev -> Level 2 / Senior Dev).
 4. The Ice-Water Test: 1 physical action in the browser/terminal to observe the mechanism (1 sentence).
 5. Where the Machine Snaps: 1 code boundary limit / prompt-stacking failure condition (1 sentence).
 6. What Was Left Out: Deferred concerns and assumptions (1 line).
@@ -261,7 +261,7 @@ simplifeyn/
 |-- references/
 |   |-- voice.md              # Style forensics, banned buzzwords, sensory verbs
 |   |-- analogies.md          # Reference catalog of computing analogies & breaking points
-|   |-- ladder.md             # Multi-tier calibration (Kitchen Table -> Maintainer)
+|   |-- ladder.md             # Audience calibration (Vibe Coder -> Junior -> Senior)
 |   \-- failure-modes.md      # 5 critical ways technical explanations fail & fixes
 |-- assets/
 |   \-- worked-examples.md    # Real PR diff with Before/After contrast
