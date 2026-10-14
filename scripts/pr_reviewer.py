@@ -28,6 +28,27 @@ def sanitize_untrusted_diff(diff_text: str) -> str:
     return re.sub(r"</untrusted_diff>", r"<\\/untrusted_diff>", diff_text)
 
 
+def write_github_output(name: str, value: str) -> None:
+    """Writes an output parameter to the file specified by GITHUB_OUTPUT."""
+    output_file = os.environ.get("GITHUB_OUTPUT")
+    if not output_file:
+        return
+    delimiter = "EOF"
+    while delimiter in value:
+        delimiter = f"EOF_{os.urandom(4).hex()}"
+    with open(output_file, "a", encoding="utf-8") as f:
+        f.write(f"{name}<<{delimiter}\n{value}\n{delimiter}\n")
+
+
+def write_github_step_summary(content: str) -> None:
+    """Appends markdown content to the file specified by GITHUB_STEP_SUMMARY."""
+    summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not summary_file:
+        return
+    with open(summary_file, "a", encoding="utf-8") as f:
+        f.write(content + "\n\n")
+
+
 def build_feynman_prompt(diff_text: str, audience: str = "vibe-coder", theme: str = "") -> str:
     """Builds the prompt instructing the LLM to generate an audited Feynman debrief."""
     sanitized_diff = sanitize_untrusted_diff(diff_text)
@@ -338,6 +359,8 @@ def main():
     parser.add_argument("--skip-cosmetic", action="store_true", default=True, help="Skip cosmetic/doc diffs")
     parser.add_argument("--no-skip-cosmetic", action="store_false", dest="skip_cosmetic")
     parser.add_argument("--strict-audit", action="store_true", default=True, help="Strictly enforce audit checks")
+    parser.add_argument("--step-summary", action="store_true", default=True, help="Write debrief to GitHub Actions Step Summary ($GITHUB_STEP_SUMMARY)")
+    parser.add_argument("--no-step-summary", action="store_false", dest="step_summary")
     parser.add_argument("--dry-run", action="store_true", help="Print comment to stdout instead of posting to GitHub")
 
     args = parser.parse_args()
@@ -365,7 +388,16 @@ def main():
         strict_audit=args.strict_audit,
     )
 
+    # Write Step Summary if enabled
+    if args.step_summary:
+        write_github_step_summary(result["comment_body"])
+
+    # Write basic outputs
+    write_github_output("debrief", result["comment_body"])
+    write_github_output("skipped", str(result["skipped"]).lower())
+
     if args.dry_run:
+        write_github_output("comment-posted", "false")
         print(result["comment_body"])
         sys.exit(0)
 
@@ -383,11 +415,13 @@ def main():
             sys.stderr.write(f"Warning: could not parse event payload: {e}\n")
 
     if not repo or not pr_num or not token:
+        write_github_output("comment-posted", "false")
         sys.stderr.write("Missing GitHub context (repo, pr_number, or token). Printing to stdout:\n\n")
         print(result["comment_body"])
         sys.exit(0)
 
     success = post_pr_comment(repo=repo, pr_number=pr_num, comment_body=result["comment_body"], github_token=token)
+    write_github_output("comment-posted", str(success).lower())
     if success:
         print(f"Successfully posted Simplifeyn debrief to {repo}#{pr_num}")
     else:

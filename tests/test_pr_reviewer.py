@@ -4,6 +4,7 @@ Unit tests for the Simplifeyn GitHub Action PR Reviewer script (scripts/pr_revie
 """
 
 import os
+import re
 import sys
 import unittest
 from unittest.mock import patch, MagicMock
@@ -152,6 +153,45 @@ class TestPrReviewer(unittest.TestCase):
         self.assertIn("https://api.github.com/repos/builtbyjuls/simplifeyn/issues/42/comments", req.full_url)
         self.assertEqual(req.headers.get("Authorization"), "token ghp_fake_token")
 
+    def test_write_github_output(self):
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode="w+", delete=False) as tf:
+            tf_path = tf.name
+
+        try:
+            with patch.dict(os.environ, {"GITHUB_OUTPUT": tf_path}):
+                pr_reviewer.write_github_output("skipped", "true")
+                pr_reviewer.write_github_output("debrief", "line 1\nline 2")
+
+            with open(tf_path, "r", encoding="utf-8") as f:
+                output_content = f.read()
+
+            self.assertIn("skipped<<", output_content)
+            self.assertIn("true", output_content)
+            self.assertIn("debrief<<", output_content)
+            self.assertIn("line 1\nline 2", output_content)
+        finally:
+            if os.path.exists(tf_path):
+                os.remove(tf_path)
+
+    def test_write_github_step_summary(self):
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode="w+", delete=False) as tf:
+            tf_path = tf.name
+
+        try:
+            with patch.dict(os.environ, {"GITHUB_STEP_SUMMARY": tf_path}):
+                pr_reviewer.write_github_step_summary("## Summary Header\nMechanism explanation.")
+
+            with open(tf_path, "r", encoding="utf-8") as f:
+                summary_content = f.read()
+
+            self.assertIn("## Summary Header", summary_content)
+            self.assertIn("Mechanism explanation.", summary_content)
+        finally:
+            if os.path.exists(tf_path):
+                os.remove(tf_path)
+
     def test_action_yml_exists_and_valid(self):
         action_file = os.path.join(BASE_DIR, "action.yml")
         self.assertTrue(os.path.isfile(action_file), "action.yml must exist in repository root")
@@ -161,8 +201,73 @@ class TestPrReviewer(unittest.TestCase):
         self.assertIn("name: 'Simplifeyn PR Reviewer'", content)
         self.assertIn("inputs:", content)
         self.assertIn("github-token:", content)
+        self.assertIn("outputs:", content)
+        self.assertIn("debrief:", content)
+        self.assertIn("skipped:", content)
+        self.assertIn("comment-posted:", content)
         self.assertIn("runs:", content)
         self.assertIn("using: 'composite'", content)
+        self.assertIn("id: feynman-reviewer", content)
+
+        # Marketplace description recommendation <= 125 chars
+        desc_match = re.search(r"description:\s*['\"](.*?)['\"]", content)
+        self.assertIsNotNone(desc_match, "action.yml must have a quoted description")
+        desc = desc_match.group(1)
+        self.assertLessEqual(len(desc), 125, f"action description should be <= 125 characters for Marketplace cards (got {len(desc)})")
+
+    def test_main_cli_dry_run_with_github_outputs(self):
+        import tempfile
+        from unittest.mock import patch
+
+        with tempfile.NamedTemporaryFile(mode="w+", delete=False) as diff_f:
+            diff_f.write(self.sample_code_diff)
+            diff_path = diff_f.name
+
+        with tempfile.NamedTemporaryFile(mode="w+", delete=False) as out_f:
+            out_path = out_f.name
+
+        with tempfile.NamedTemporaryFile(mode="w+", delete=False) as sum_f:
+            sum_path = sum_f.name
+
+        try:
+            test_argv = [
+                "pr_reviewer.py",
+                "--diff-file", diff_path,
+                "--provider", "mock",
+                "--dry-run",
+            ]
+            env_vars = {
+                "GITHUB_OUTPUT": out_path,
+                "GITHUB_STEP_SUMMARY": sum_path,
+            }
+            with patch.object(sys, "argv", test_argv), patch.dict(os.environ, env_vars), patch("sys.stdout"):
+                with patch("pr_reviewer.process_diff") as mock_proc:
+                    mock_proc.return_value = {
+                        "skipped": False,
+                        "skip_reason": "",
+                        "audit_passed": True,
+                        "comment_body": "## Test Comment Body",
+                    }
+                    with self.assertRaises(SystemExit) as cm:
+                        pr_reviewer.main()
+                    self.assertEqual(cm.exception.code, 0)
+
+            with open(out_path, "r", encoding="utf-8") as f:
+                output_content = f.read()
+            self.assertIn("debrief<<", output_content)
+            self.assertIn("## Test Comment Body", output_content)
+            self.assertIn("skipped<<", output_content)
+            self.assertIn("false", output_content)
+            self.assertIn("comment-posted<<", output_content)
+            self.assertIn("false", output_content)
+
+            with open(sum_path, "r", encoding="utf-8") as f:
+                summary_content = f.read()
+            self.assertIn("## Test Comment Body", summary_content)
+        finally:
+            for p in (diff_path, out_path, sum_path):
+                if os.path.exists(p):
+                    os.remove(p)
 
 
 if __name__ == "__main__":

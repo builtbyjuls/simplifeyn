@@ -3,6 +3,7 @@
 [![Agent Skills Standard](https://img.shields.io/badge/Agent%20Skills-Standard-blue.svg)](https://agentskills.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 [![CI](https://github.com/builtbyjuls/simplifeyn/actions/workflows/ci.yml/badge.svg)](https://github.com/builtbyjuls/simplifeyn/actions/workflows/ci.yml)
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Simplifeyn%20PR%20Reviewer-purple.svg?logo=github)](https://github.com/marketplace/actions/simplifeyn-pr-reviewer)
 
 > **An Agent Skill that explains code changes, PR diffs, and feature implementations the way Richard Feynman explained physics: physical mechanism first, one honest everyday analogy with its exact limits, and an audience-calibrated ladder from vibe coder to system maintainer.**
 
@@ -227,7 +228,7 @@ If the change is trivial (pure docs, lockfiles, formatting), output a 1-line not
 
 ### Mode 7: Automated GitHub Action PR Reviewer
 
-Explain pull requests automatically using the Richard Feynman technique on every PR:
+Explain pull requests automatically using the Richard Feynman technique on every PR by integrating the [Simplifeyn PR Reviewer](https://github.com/marketplace/actions/simplifeyn-pr-reviewer) Action into your CI pipeline:
 
 ```yaml
 # .github/workflows/simplifeyn.yml
@@ -250,14 +251,39 @@ jobs:
           fetch-depth: 0
 
       - name: Run Simplifeyn PR Reviewer
-        uses: builtbyjuls/simplifeyn@main
+        id: simplifeyn
+        uses: builtbyjuls/simplifeyn@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           api-key: ${{ secrets.GEMINI_API_KEY || secrets.ANTHROPIC_API_KEY || secrets.OPENAI_API_KEY }}
           audience: 'vibe-coder'     # vibe-coder (default) | junior-dev | senior-dev | full
           skip-cosmetic: 'true'      # skips trivial doc/lockfile PRs automatically
           strict-audit: 'true'       # enforces < 170 words and zero buzzwords
+          step-summary: 'true'       # renders markdown debrief in GitHub Actions summary
 ```
+
+#### Action Inputs
+
+| Input | Description | Default |
+| :--- | :--- | :--- |
+| `github-token` | GitHub token for posting pull request comments | `${{ github.token }}` |
+| `api-key` | API key for model provider (Gemini, Anthropic, or OpenAI) | `""` |
+| `provider` | LLM provider (`gemini`, `anthropic`, `openai`, `mock`, `auto`) | `'auto'` |
+| `model` | Specific model identifier | `""` |
+| `audience` | Audience calibration (`vibe-coder`, `junior-dev`, `senior-dev`, `full`) | `'vibe-coder'` |
+| `theme` | Physical analogy domain (`kitchen`, `warehouse`, `workshop`, `transit`, etc.) | `""` |
+| `skip-cosmetic` | Automatically skip trivial doc/formatting PRs | `'true'` |
+| `strict-audit` | Strictly enforce < 170 prose words and zero buzzwords | `'true'` |
+| `step-summary` | Write debrief to GitHub Actions Step Summary (`$GITHUB_STEP_SUMMARY`) | `'true'` |
+| `dry-run` | Print debrief to stdout without posting comment | `'false'` |
+
+#### Action Outputs
+
+| Output | Description |
+| :--- | :--- |
+| `debrief` | The generated Feynman debrief markdown text |
+| `skipped` | Whether the debrief was skipped due to trivial/cosmetic diff (`true` or `false`) |
+| `comment-posted` | Whether the comment was successfully posted to the PR (`true` or `false`) |
 
 ---
 
