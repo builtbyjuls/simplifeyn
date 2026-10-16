@@ -380,4 +380,4 @@ Contributions and feedback are welcome! Areas to explore:
 
 ## License
 
-[MIT](./LICENSE) (c) 2026 Julius. Use it, fork it, ship it.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
